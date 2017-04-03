@@ -1,0 +1,47 @@
+# OS generated files #
+######################
+
+.DS_Store*
+._*
+.Spotlight*
+.Trash*
+ehthumbs.db
+Thumbs.db
+.nfs*
+
+# VIM generated files #
+#######################
+
+*.sw?
+*.bak
+*.un~
+*~
+
+# python specifc #
+##################
+
+__pycache__
+*.mo
+*.egg-info
+*.egg
+*.EGG
+*.EGG-INFO
+*.egg-info
+bin
+build
+develop-eggs
+downloads
+eggs
+fake-eggs
+parts
+dist
+.installed.cfg
+.mr.developer.cfg
+.hg
+.bzr
+.svn
+*.pyc
+*.pyo
+*.tmp*
+core
+

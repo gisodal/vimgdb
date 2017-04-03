@@ -1,0 +1,21 @@
+" This is the default vim server vimrc file.
+" When vim is started, it loads this file instead of ~/.vimrc of the user.
+"
+" to get info about the following config, use vim's help system, eg:
+" :help nocompatible
+set nocompatible
+
+filetype plugin on
+filetype indent on
+syntax on
+
+function! VimrunnerPyEvaluateCommandOutput(command)
+  " redirects using 'redir' the output of 'command' in a variable called 
+  " output and returns its value
+  redir => output
+    silent exe a:command
+  redir END
+
+  return output
+endfunction
+
