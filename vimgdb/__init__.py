@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# vim:ts=4:sw=4:et
 
 from .vimgdb import Vimgdb
 
-# >>> from vimrunner import Server
+from .gdbinterface import Gdb

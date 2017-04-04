@@ -1,0 +1,2 @@
+set auto-solib-add off
+echo hoi
