@@ -1,2 +1,33 @@
-set auto-solib-add off
-echo hoi
+# vim: set filetype=python:
+
+define get_current_location
+python
+# get all sources loadable by gdb
+def GetGdbVariable(variable):
+    value = str(gdb.parse_and_eval("{0}".format(variable)))
+    value = dir.replace("\"","")
+    return value
+
+def GetCurrentLocation():
+    import re
+
+    raw_line_info = gdb.execute('info line',to_string=True)
+    raw_source_info = gdb.execute('info source',to_string=True)
+
+    line = re.findall('^Line ([0-9]+)', raw_line_info)
+    source = re.findall('Located in ([^\n]+)', raw_source_info)
+    if len(line) > 0 and len(source) > 0:
+        return True,line[0],source[0]
+    else:
+        return False,'',''
+
+success,line,source = GetCurrentLocation()
+if success:
+    print "Line   : ",line
+    print "Source : ",source
+else:
+    print "Could not determine location"
+
+end
+end
+
