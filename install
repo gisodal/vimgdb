@@ -2,7 +2,9 @@
 
 command cd vimgdb
 python setup.py install --user
+python3 setup.py install --user
 command cd ..
 command cd vimrunner
 python setup.py install --user
+python3 setup.py install --user
 
