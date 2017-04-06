@@ -4,8 +4,8 @@ import sys
 class Vimgdb:
     _server_name = u"GDB-VIM-TMUX"
     _vimgdb_environment_variable = "VIMGDB_LIBRARY_PATH"
-    _vimrc = ""
     _default_vimrc = ""
+    _vimrc = ""
 
     def __init__(self):
         import os
@@ -16,7 +16,6 @@ class Vimgdb:
 
         self._library_dir = os.path.abspath(os.path.dirname(__file__))
         self._vimrc = os.path.join(self._library_dir, 'config/vimrc')
-        os.environ[self._vimgdb_environment_variable] = self._library_dir
 
     def Start(self):
         self.server = vimrunner.Server(self._server_name)

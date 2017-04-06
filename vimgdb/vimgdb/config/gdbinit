@@ -1,6 +1,13 @@
 # vim: set filetype=python:
 
-define get_current_location
+define _vhimgdb_python_version
+python
+import sys
+print(sys.version_info.major)
+end
+end
+
+define _vimgdb_get_location
 python
 # get all sources loadable by gdb
 def GetGdbVariable(variable):
@@ -21,13 +28,17 @@ def GetCurrentLocation():
     else:
         return False,'',''
 
+def GetLibraryLocation():
+    import os
+    _vimgdb_environment_variable = "VIMGDB_LIBRARY_PATH"
+    return os.environ[_vimgdb_environment_variable]
+
 success,line,source = GetCurrentLocation()
 if success:
-    print "Line   : ",line
+    print("Line   : ",line)
     print "Source : ",source
 else:
-    print "Could not determine location"
-
+    print("No location available")
 end
 end
 

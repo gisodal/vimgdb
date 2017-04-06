@@ -1,0 +1,8 @@
+#!/bin/bash
+
+command cd vimgdb
+python setup.py install --user
+command cd ..
+command cd vimrunner
+python setup.py install --user
+

@@ -4,7 +4,8 @@ class Gdb:
     def Start(self):
         import os
         from subprocess import call
-        gdbinit = os.path.join(os.path.dirname(__file__), "gdbinit")
+        library_dir = os.path.abspath(os.path.dirname(__file__))
+        gdbinit = os.path.join(library_dir, 'config/gdbinit')
         cmd = "gdb -iex 'source {0}'".format(gdbinit)
         call(cmd, shell=True)
 
