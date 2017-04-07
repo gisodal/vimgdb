@@ -6,6 +6,6 @@ class Gdb:
         from subprocess import call
         library_dir = os.path.abspath(os.path.dirname(__file__))
         gdbinit = os.path.join(library_dir, 'config/gdbinit')
-        cmd = "gdb -iex 'source {0}'".format(gdbinit)
+        cmd = "gdb -n -iex 'source {0}'".format(gdbinit)
         call(cmd, shell=True)
 

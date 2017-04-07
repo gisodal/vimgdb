@@ -3,13 +3,11 @@
 from vimgdb import Vimgdb
 from vimgdb import Gdb
 
-gdb = Gdb()
-gdb.Start()
-
-#server = Vimgdb()
-#if not server.IsRunning():
-#    server.Start()
-#else:
-#    server.Connect()
-#    server.Test()
-
+server = Vimgdb()
+if not server.IsRunning():
+    server.Start()
+else:
+    gdb = Gdb()
+    gdb.Start()
+    #server.Connect()
+    #server.Test()

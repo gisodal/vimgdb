@@ -1,17 +1,19 @@
 # vim: set filetype=python:
 
-define _vhimgdb_python_version
+define _vimgdb_python_version
 python
 import sys
 print(sys.version_info.major)
 end
 end
 
-define _vimgdb_get_location
+define _vimgdb_communicate
 python
+from __future__ import print_function
+
 # get all sources loadable by gdb
 def GetGdbVariable(variable):
-    value = str(gdb.parse_and_eval("{0}".format(variable)))
+    value = gdb.parse_and_eval("{0}".format(variable))
     value = dir.replace("\"","")
     return value
 
@@ -33,12 +35,35 @@ def GetLibraryLocation():
     _vimgdb_environment_variable = "VIMGDB_LIBRARY_PATH"
     return os.environ[_vimgdb_environment_variable]
 
-success,line,source = GetCurrentLocation()
-if success:
-    print("Line   : ",line)
-    print "Source : ",source
-else:
-    print("No location available")
+def highlightInVim(line,source):
+    from vimgdb import Vimgdb
+    vim = Vimgdb()
+    if vim.IsRunning():
+        vim.Connect()
+        vim.GotoFile(source)
+        vim.GotoLine(line)
+    else:
+        raise RuntimeError("No connection to vim")
+
+try:
+    success,line,source = GetCurrentLocation()
+    print(source,": ",line)
+    if success:
+        highlightInVim(line,source)
+    else:
+        raise RuntimeError("GDB could not determine source")
+except Exception as e:
+    print("Vimgdb Exception: {0}".format(str(e)))
+
 end
 end
+
+define hookpost-next
+    _vimgdb_communicate
+end
+
+define hookpost-step
+    _vimgdb_communicate
+end
+
 

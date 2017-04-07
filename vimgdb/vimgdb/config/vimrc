@@ -1,6 +1,7 @@
 highlight Search ctermfg=None ctermbg=None cterm=Bold
 autocmd CursorMoved * set nocursorline
 autocmd InsertEnter * set nocursorline
+set shortmess=at
 set sidescroll=1
 set sidescrolloff=10
 set scrolloff=10
