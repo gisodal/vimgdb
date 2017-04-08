@@ -1,8 +1,11 @@
-highlight Search ctermfg=None ctermbg=None cterm=Bold
-autocmd CursorMoved * set nocursorline
-autocmd InsertEnter * set nocursorline
+autocmd ColorScheme * highlight GdbBreakpoint ctermfg=Red ctermbg=None cterm=Bold
+highlight GdbBreakpoint ctermfg=Red ctermbg=None cterm=Bold
+autocmd ColorScheme * highlight GdbLocation ctermfg=None ctermbg=235 cterm=None
+highlight GdbLocation ctermfg=None ctermbg=235 cterm=None
+
 set shortmess=at
 set sidescroll=1
 set sidescrolloff=10
 set scrolloff=10
+set number
 

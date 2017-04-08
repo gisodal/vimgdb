@@ -32,7 +32,11 @@ def highlightInVim(line,source):
     vim = Vimgdb()
     if vim.IsRunning():
         vim.Connect()
-        vim.GotoLocation(source,line)
+        if vim.IsDiffentFile(source):
+            vim.GotoFile(source)
+
+        vim.GotoLine(line)
+        vim.Redraw()
     else:
         raise RuntimeError("No connection to vim")
 
@@ -45,7 +49,20 @@ except Exception as e:
 end
 end
 
+define vim
+    _vimgdb_communicate
+end
+
 define hook-stop
     _vimgdb_communicate
 end
+
+define hookpost-up
+    _vimgdb_communicate
+end
+
+define hookpost-down
+    _vimgdb_communicate
+end
+
 

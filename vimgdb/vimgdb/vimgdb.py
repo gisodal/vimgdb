@@ -41,6 +41,9 @@ class Vimgdb:
         if not self.IsConnected():
             raise RuntimeError("No connection to vim session")
 
+    def IsDiffentFile(self,filename):
+        return filename != self._filename
+
     def Connect(self):
         if not self.IsRunning():
             raise RuntimeError("Server is not running")
@@ -50,32 +53,39 @@ class Vimgdb:
         self._server = vimrunner.Server(servers[index])
         self._vim = self._server.connect(timeout=1)
 
-    def _GotoLine(self,line):
-        cmd_highlightline = "/\\%{0}l/\<Enter>".format(line)
-        self._vim.type(cmd_highlightline)
-        #cmd_gotoline = ":{0}\<Enter>".format(line)
-        #self._vim.type(cmd_gotoline)
-        #self._vim.type("z.")
-        self._vim.command("set cursorline")
-        self._vim.command("set cursorline")
+    def ShowBreakpoints(self, breakpoints):
+        cmd_breakpoint = ""
+        for breakpoint in breakpoints:
+            print("line: ",breakpoint)
+            if cmd_breakpoint != "":
+                cmd_breakpoint += "\\|"
+            cmd_breakpoint += "\\%{0}l".format(breakpoint)
 
-    def _GotoFile(self,filename,redraw=True):
+        cmd_highlight = "match GdbBreakpoint /{0}/".format(cmd_breakpoint)
+        value = self._vim.command(cmd_highlight)
+
+    def GotoLine(self,line):
+        cmd_highlight = "match GdbLocation /\\%{0}l/".format(line)
+        value = self._vim.command(cmd_highlight)
+        self._vim.command("{0}".format(line))
+
+    def GotoFile(self,filename):
         if filename != self._filename:
             if self.Exists(filename):
                 self._filename = filename
                 self._vim.edit(filename)
-                if redraw:
-                    self._vim.command("redraw")
             else:
                 raise RuntimeError("Source file '{0}' not found".format(filename))
 
-    def _Escape(self):
+    def Redraw(self):
+        self._vim.command("redraw")
+
+    def Escape(self):
         self._vim.type("\<Esc>")
 
     def GotoLocation(self,filename,line):
         self.VerifyConnection()
-        self._Escape()
-        self._GotoFile(filename,redraw=False)
+        self._GotoFile(filename)
         self._GotoLine(line)
 
     def SetVimrc(self, vimrc):
@@ -116,7 +126,6 @@ class Vimgdb:
     def Test(self):
         try:
             import time
-            self._Escape()
             self._GotoFile("/home/gdal/.vimrc")
             self._GotoLine(2)
             time.sleep(1)
