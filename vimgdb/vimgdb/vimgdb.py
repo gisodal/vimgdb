@@ -94,7 +94,9 @@ class Vimgdb:
 
     def StartGdb(self):
         from subprocess import call
-        cmd = "gdb -n -iex 'source {0}'".format(self._gdbinit)
+        import sys
+        arguments = " ".join(sys.argv[1:])
+        cmd = "gdb -iex 'source {0}' {1}".format(self._gdbinit,arguments)
         call(cmd, shell=True)
 
     def StartVim(self):
