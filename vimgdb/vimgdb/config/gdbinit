@@ -21,28 +21,37 @@ def GetCurrentLocation():
         current_line = gdb.decode_line()
         symbol_table_and_line = current_line[1][0]
         symbol_table = symbol_table_and_line.symtab
-        source = symbol_table.fullname()
+        fullsource = symbol_table.fullname()
+        source = symbol_table.filename
         line = symbol_table_and_line.line
-        return source,line
+        return fullsource,source,line
     except:
         raise RuntimeError("Current line not detected")
 
-def highlightInVim(line,source):
+def GetBreakpoints(source):
+    import re
+    raw_break_info = gdb.execute('info break',to_string=True)
+    match = '{0}:([0-9]+)'.format(source)
+    breaklines = re.findall(match, raw_break_info)
+    return breaklines
+
+def highlightInVim(fullsource,source,line):
     from vimgdb import Vimgdb
     vim = Vimgdb()
     if vim.IsRunning():
         vim.Connect()
-        if vim.IsDiffentFile(source):
-            vim.GotoFile(source)
+        if vim.IsDiffentFile(fullsource):
+            vim.GotoFile(fullsource)
+            breakpoints = GetBreakpoints(source)
+            vim.ShowBreakpoints(breakpoints)
 
         vim.GotoLine(line)
         vim.Redraw()
     else:
         raise RuntimeError("No connection to vim")
-
 try:
-    source,line = GetCurrentLocation()
-    highlightInVim(line,source)
+    fullsource,source,line = GetCurrentLocation()
+    highlightInVim(fullsource,source,line)
 except Exception as e:
     print("Vimgdb Exception: {0}".format(str(e)))
 
@@ -64,5 +73,4 @@ end
 define hookpost-down
     _vimgdb_communicate
 end
-
 

@@ -56,7 +56,6 @@ class Vimgdb:
     def ShowBreakpoints(self, breakpoints):
         cmd_breakpoint = ""
         for breakpoint in breakpoints:
-            print("line: ",breakpoint)
             if cmd_breakpoint != "":
                 cmd_breakpoint += "\\|"
             cmd_breakpoint += "\\%{0}l".format(breakpoint)
@@ -65,9 +64,11 @@ class Vimgdb:
         value = self._vim.command(cmd_highlight)
 
     def GotoLine(self,line):
-        cmd_highlight = "match GdbLocation /\\%{0}l/".format(line)
-        value = self._vim.command(cmd_highlight)
+        self._vim.command("set cursorline")
         self._vim.command("{0}".format(line))
+        #cmd_highlight = "match GdbLocation /\\%{0}l/".format(line)
+        #value = self._vim.command(cmd_highlight)
+        #self._vim.command("{0}".format(line))
 
     def GotoFile(self,filename):
         if filename != self._filename:
@@ -85,8 +86,8 @@ class Vimgdb:
 
     def GotoLocation(self,filename,line):
         self.VerifyConnection()
-        self._GotoFile(filename)
-        self._GotoLine(line)
+        self.GotoFile(filename)
+        self.GotoLine(line)
 
     def SetVimrc(self, vimrc):
         self._default_vimrc = vimrc
@@ -126,12 +127,12 @@ class Vimgdb:
     def Test(self):
         try:
             import time
-            self._GotoFile("/home/gdal/.vimrc")
-            self._GotoLine(2)
+            self.GotoFile("/home/gdal/.vimrc")
+            self.GotoLine(2)
             time.sleep(1)
-            self._GotoLine(3)
+            self.GotoLine(3)
             time.sleep(1)
-            self._GotoLine(10)
+            self.GotoLine(10)
 
         except RuntimeError as e:
             print("{0}".format(e))
