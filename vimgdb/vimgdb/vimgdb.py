@@ -130,3 +130,7 @@ class Vimgdb:
             #print("Unexpected error:", sys.exc_info()[0])
             raise Exception(str(e))
 
+if __name__ == "__main__":
+    vimgdb = Vimgdb()
+    vimgdb.Start()
+
