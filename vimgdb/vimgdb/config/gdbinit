@@ -11,59 +11,41 @@ define _vimgdb_communicate
 python
 from __future__ import print_function
 
-# get all sources loadable by gdb
 def GetGdbVariable(variable):
     value = gdb.parse_and_eval("{0}".format(variable))
     value = dir.replace("\"","")
     return value
 
 def GetCurrentLocation():
-    import re
-
-    raw_line_info = gdb.execute('info line',to_string=True)
-    raw_source_info = gdb.execute('info source',to_string=True)
-
-    line = re.findall('^Line ([0-9]+)', raw_line_info)
-    source = re.findall('Located in ([^\n]+)', raw_source_info)
-    if len(line) > 0 and len(source) > 0:
-        return True,line[0],source[0]
-    else:
-        return False,'',''
-
-def GetLibraryLocation():
-    import os
-    _vimgdb_environment_variable = "VIMGDB_LIBRARY_PATH"
-    return os.environ[_vimgdb_environment_variable]
+    try:
+        current_line = gdb.decode_line()
+        symbol_table_and_line = current_line[1][0]
+        symbol_table = symbol_table_and_line.symtab
+        source = symbol_table.fullname()
+        line = symbol_table_and_line.line
+        return source,line
+    except:
+        raise RuntimeError("Current line not detected")
 
 def highlightInVim(line,source):
     from vimgdb import Vimgdb
     vim = Vimgdb()
     if vim.IsRunning():
         vim.Connect()
-        vim.GotoFile(source)
-        vim.GotoLine(line)
+        vim.GotoLocation(source,line)
     else:
         raise RuntimeError("No connection to vim")
 
 try:
-    success,line,source = GetCurrentLocation()
-    print(source,": ",line)
-    if success:
-        highlightInVim(line,source)
-    else:
-        raise RuntimeError("GDB could not determine source")
+    source,line = GetCurrentLocation()
+    highlightInVim(line,source)
 except Exception as e:
     print("Vimgdb Exception: {0}".format(str(e)))
 
 end
 end
 
-define hookpost-next
+define hook-stop
     _vimgdb_communicate
 end
-
-define hookpost-step
-    _vimgdb_communicate
-end
-
 

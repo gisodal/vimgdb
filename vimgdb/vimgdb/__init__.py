@@ -3,4 +3,3 @@
 
 from .vimgdb import Vimgdb
 
-from .gdbinterface import Gdb
