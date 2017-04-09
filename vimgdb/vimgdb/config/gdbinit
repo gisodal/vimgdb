@@ -8,72 +8,21 @@ else
 end
 
 python
-from __future__ import print_function
+from vimgdb import Vimgdb
 
-def GetGdbVariable(variable):
-    value = str(gdb.parse_and_eval("{0}".format(variable)))
-    value = value.replace("\"","")
-    value = value.split("\\0")[0]
-    return value
+vimgdb = Vimgdb()
+vimgdb.Communicate()
 
-def GetCurrentLocation():
-    try:
-        current_line = gdb.decode_line()
-        symbol_table_and_line = current_line[1][0]
-        symbol_table = symbol_table_and_line.symtab
-        fullsource = symbol_table.fullname()
-        source = symbol_table.filename
-        line = symbol_table_and_line.line
-        return fullsource,source,line
-    except:
-        raise RuntimeError("Current location not detected")
-
-def GetBreakpoints(source):
-    import re
-    raw_break_info = gdb.execute('info break',to_string=True)
-    match = '{0}:([0-9]+)'.format(source)
-    breaklines = re.findall(match, raw_break_info)
-    return breaklines
-
-def UpdateBreakpoints(source):
-    from vimgdb import Vimgdb
-    vim = Vimgdb()
-    if vim.IsRunning():
-        vim.Connect()
-        breakpoints = GetBreakpoints(source)
-        vim.ShowBreakpoints(breakpoints)
-        vim.Redraw()
-
-def UpdateAll(fullsource,source,line):
-    from vimgdb import Vimgdb
-    vim = Vimgdb()
-    if vim.IsRunning():
-        vim.Connect()
-        if vim.IsDiffentFile(fullsource):
-            vim.GotoFile(fullsource)
-            breakpoints = GetBreakpoints(source)
-            vim.ShowBreakpoints(breakpoints)
-
-        vim.GotoLine(line)
-        vim.Redraw()
-    else:
-        raise RuntimeError("No connection to vim")
-
-try:
-    option = GetGdbVariable("$_vimgdb_option")
-    fullsource,source,line = GetCurrentLocation()
-    if option == "breakpoints":
-        UpdateBreakpoints(source)
-    else:
-        UpdateAll(fullsource,source,line)
-except Exception as e:
-    print("Vimgdb Exception: {0}".format(str(e)))
 end
 end
 
 alias vim = _vimgdb
 
 define hookpost-break
+    _vimgdb breakpoints
+end
+
+define hookpost-clear
     _vimgdb breakpoints
 end
 
