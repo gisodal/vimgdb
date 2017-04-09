@@ -1,19 +1,19 @@
 # vim: set filetype=python:
 
-define _vimgdb_python_version
-python
-import sys
-print(sys.version_info.major)
-end
+define _vimgdb
+if $argc >= 1
+    set $_vimgdb_option = "$arg0"
+else
+    set $_vimgdb_option = "vimgdb init option"
 end
 
-define _vimgdb_communicate
 python
 from __future__ import print_function
 
 def GetGdbVariable(variable):
-    value = gdb.parse_and_eval("{0}".format(variable))
-    value = dir.replace("\"","")
+    value = str(gdb.parse_and_eval("{0}".format(variable)))
+    value = value.replace("\"","")
+    value = value.split("\\0")[0]
     return value
 
 def GetCurrentLocation():
@@ -26,7 +26,7 @@ def GetCurrentLocation():
         line = symbol_table_and_line.line
         return fullsource,source,line
     except:
-        raise RuntimeError("Current line not detected")
+        raise RuntimeError("Current location not detected")
 
 def GetBreakpoints(source):
     import re
@@ -35,7 +35,16 @@ def GetBreakpoints(source):
     breaklines = re.findall(match, raw_break_info)
     return breaklines
 
-def highlightInVim(fullsource,source,line):
+def UpdateBreakpoints(source):
+    from vimgdb import Vimgdb
+    vim = Vimgdb()
+    if vim.IsRunning():
+        vim.Connect()
+        breakpoints = GetBreakpoints(source)
+        vim.ShowBreakpoints(breakpoints)
+        vim.Redraw()
+
+def UpdateAll(fullsource,source,line):
     from vimgdb import Vimgdb
     vim = Vimgdb()
     if vim.IsRunning():
@@ -49,28 +58,38 @@ def highlightInVim(fullsource,source,line):
         vim.Redraw()
     else:
         raise RuntimeError("No connection to vim")
+
 try:
+    option = GetGdbVariable("$_vimgdb_option")
     fullsource,source,line = GetCurrentLocation()
-    highlightInVim(fullsource,source,line)
+    if option == "breakpoints":
+        UpdateBreakpoints(source)
+    else:
+        UpdateAll(fullsource,source,line)
 except Exception as e:
     print("Vimgdb Exception: {0}".format(str(e)))
-
 end
 end
 
-define vim
-    _vimgdb_communicate
+alias vim = _vimgdb
+
+define hookpost-break
+    _vimgdb breakpoints
+end
+
+define hookpost-delete
+    _vimgdb breakpoints
 end
 
 define hook-stop
-    _vimgdb_communicate
+    _vimgdb
 end
 
 define hookpost-up
-    _vimgdb_communicate
+    _vimgdb
 end
 
 define hookpost-down
-    _vimgdb_communicate
+    _vimgdb
 end
 

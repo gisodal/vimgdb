@@ -54,21 +54,22 @@ class Vimgdb:
         self._vim = self._server.connect(timeout=1)
 
     def ShowBreakpoints(self, breakpoints):
-        cmd_breakpoint = ""
-        for breakpoint in breakpoints:
-            if cmd_breakpoint != "":
-                cmd_breakpoint += "\\|"
-            cmd_breakpoint += "\\%{0}l".format(breakpoint)
+        if len(breakpoints) > 0:
+            cmd_breakpoint = ""
+            for breakpoint in breakpoints:
+                if cmd_breakpoint != "":
+                    cmd_breakpoint += "\\|"
+                cmd_breakpoint += "\\%{0}l".format(breakpoint)
 
-        cmd_highlight = "match GdbBreakpoint /{0}/".format(cmd_breakpoint)
-        value = self._vim.command(cmd_highlight)
+            cmd_highlight = "2match GdbBreakpoint /{0}/".format(cmd_breakpoint)
+            self._vim.command(cmd_highlight)
+        else:
+            self._vim.command("2match")
 
     def GotoLine(self,line):
-        self._vim.command("set cursorline")
+        cmd_highlight = "3match GdbLocation /\\%{0}l/".format(line)
+        value = self._vim.command(cmd_highlight)
         self._vim.command("{0}".format(line))
-        #cmd_highlight = "match GdbLocation /\\%{0}l/".format(line)
-        #value = self._vim.command(cmd_highlight)
-        #self._vim.command("{0}".format(line))
 
     def GotoFile(self,filename):
         if filename != self._filename:
