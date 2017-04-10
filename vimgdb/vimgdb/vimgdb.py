@@ -74,15 +74,6 @@ class Vimgdb:
     def SetVimrc(self, vimrc):
         self.__default__vimrc = vimrc
 
-    def LoadConfig(self):
-        if self.Exists(self.__default_vimrc):
-            self.__vim.source(self.__default_vimrc)
-
-        if self.Exists(self.__vimrc):
-            self.__vim.source(self.__vimrc)
-        else:
-            raise RuntimeError("Config file '{0}' not found".format(self.__vimrc))
-
     def StartGdb(self):
         from subprocess import call
         import sys
@@ -91,10 +82,17 @@ class Vimgdb:
         call(cmd, shell=True)
 
     def StartVim(self):
-        self.__server = vimrunner.Server(self.__server_name)
+        if not self.Exists(self.__vimrc):
+            raise RuntimeError("Config file '{0}' not found".format(self.__vimrc))
+
+        args = []
+        args.append("-n")
+        args.append("-c 'source {0}'".format(self.__default_vimrc))
+        args.append("-c 'source {0}'".format(self.__vimrc))
+        args.append("-c 'set shortmess=I'")
+        self.__server = vimrunner.Server(self.__server_name,extra_args=args)
         if not self.IsRunning():
             self.__vim = self.__server.start()
-            self.LoadConfig()
         else:
             raise RuntimeError("Vim is already running")
 
@@ -147,9 +145,10 @@ class Vimgdb:
 
     def __Update(self,fullsource,source,line,force=False):
         if self.IsDiffentFile(fullsource) or force:
-            import pdb; pdb.set_trace()
+
             self.GotoFile(fullsource)
-            self.__UpdateBreakpoints(source)
+            breakpoints = self.GetBreakpoints(source)
+            self.__UpdateBreakpoints(breakpoints)
 
         self.GotoLine(line)
 

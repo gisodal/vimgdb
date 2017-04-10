@@ -9,9 +9,20 @@ end
 
 python
 from vimgdb import Vimgdb
+# time function
+def Timed(timed, function, *args, **kwargs):
+    if timed:
+        import timeit
+        t = timeit.Timer(lambda: function(*args, **kwargs))
+        try:
+            print t.timeit(1)," Seconds"
+        except:
+            t.print_exc()
+    else:
+        function(*args, **kwargs)
 
 vimgdb = Vimgdb()
-vimgdb.Communicate()
+Timed(True,vimgdb.Communicate)
 
 end
 end
