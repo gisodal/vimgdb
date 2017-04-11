@@ -8,7 +8,7 @@ else
 end
 
 python
-from vimgdb import Vimgdb
+
 # time function
 def Timed(timed, function, *args, **kwargs):
     if timed:
@@ -21,8 +21,25 @@ def Timed(timed, function, *args, **kwargs):
     else:
         function(*args, **kwargs)
 
+from vimgdb import Vimgdb
+import cProfile, pstats
+
+profile = cProfile.Profile()
+profile.enable()
+
 vimgdb = Vimgdb()
-Timed(True,vimgdb.Communicate)
+vimgdb.Communicate()
+
+profile.disable()
+profile.create_stats()
+stats = pstats.Stats(profile)
+stats.sort_stats('time','cumulative')
+stats.print_stats(10)
+#stats.dump_stats("profile.pstats")
+#
+#profile.print_stats(sort='time')
+#profile.dump_stats("profile2.pstats")
+#Timed(True,vimgdb.Communicate)
 
 end
 end
