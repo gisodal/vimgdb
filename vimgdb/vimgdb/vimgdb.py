@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from vimrunner import vimrunner
 
 class Vimgdb:
-    __server_name = u"GDB-VIM-TMUX"
+    __server_name = u"VIMGDB"
     __default_vimrc = None
     __vimrc = None
     __gdbinit = None
@@ -18,6 +18,7 @@ class Vimgdb:
         self.__library_dir = os.path.abspath(os.path.dirname(__file__))
         self.__vimrc = os.path.join(self.__library_dir, 'config/vimrc')
         self.__gdbinit = os.path.join(self.__library_dir, 'config/gdbinit')
+        self.__executable = 'vim'
 
     def Exists(self,filename):
         import os
@@ -29,9 +30,15 @@ class Vimgdb:
         except:
             return False
 
+    def GetServerlist(self):
+        import subprocess
+        output = subprocess.check_output([self.__executable, '--serverlist'])
+        output.decode('utf-8')
+        return output
+
     def IsRunning(self):
         try:
-            servers = vimrunner.Server().server_list()
+            servers = self.GetServerlist()
             servers.index(self.__server_name)
             return True
         except:
@@ -77,22 +84,21 @@ class Vimgdb:
     def StartGdb(self):
         from subprocess import call
         import sys
-        arguments = " ".join(sys.argv[1:])
-        cmd = "gdb -iex 'source {0}' {1}".format(self.__gdbinit,arguments)
-        call(cmd, shell=True)
+        cmd = ["gdb","-iex","source {0}".format(self.__gdbinit)] + sys.argv[1:]
+        call(cmd)
 
     def StartVim(self):
         if not self.Exists(self.__vimrc):
             raise RuntimeError("Config file '{0}' not found".format(self.__vimrc))
 
-        args = []
-        args.append("-n")
-        args.append("-c 'source {0}'".format(self.__default_vimrc))
-        args.append("-c 'source {0}'".format(self.__vimrc))
-        args.append("-c 'set shortmess=I'")
-        self.__server = vimrunner.Server(self.__server_name,extra_args=args)
         if not self.IsRunning():
-            self.__vim = self.__server.start()
+            from subprocess import call
+            cmd = [self.__executable,
+                "--servername","{0}".format(self.__server_name),
+                "-n",
+                "-c","source {0}".format(self.__vimrc)]
+            print("cmd:", cmd)
+            call(cmd)
         else:
             raise RuntimeError("Vim is already running")
 
@@ -137,7 +143,7 @@ class Vimgdb:
                 if cmd_breakpoint != "":
                     cmd_breakpoint += "\\|"
                 cmd_breakpoint += "\\%{0}l".format(breakpoint)
-
+            # vim --servername VIMGDB --remote-send ':3match GdbLocation /\%2l/ | 2match GdbBreakpoint /\%3l/<Enter> | redraw!'
             cmd_highlight = "2match GdbBreakpoint /{0}/".format(cmd_breakpoint)
             self.__vim.command(cmd_highlight)
         else:
