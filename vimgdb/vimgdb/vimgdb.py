@@ -1,112 +1,94 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
-from vimrunner import vimrunner
+import subprocess
 
-class Vimgdb:
-    __server_name = u"VIMGDB"
-    __default_vimrc = None
-    __vimrc = None
-    __gdbinit = None
-    __filename = None
-    __server = None
-    __vim = None
-    __library_dir = None
+class Vim:
 
     def __init__(self):
-        import os
-        home = os.path.expanduser("~")
-        self.__default_vimrc = home + "/.vimrc"
-        self.__library_dir = os.path.abspath(os.path.dirname(__file__))
-        self.__vimrc = os.path.join(self.__library_dir, 'config/vimrc')
-        self.__gdbinit = os.path.join(self.__library_dir, 'config/gdbinit')
-        self.__executable = 'vim'
+        self.servername = u"VIMGDB"
+        self.executable = "vim"
+        self.command = []
 
-    def Exists(self,filename):
-        import os
-        return os.path.exists(filename)
+    def Start(self,check=True):
+        from os import path
 
-    def IsConnected(self):
-        try:
-            return self.__vim != None and self.__server.is_running()
-        except:
-            return False
+        if check and self.IsRunning():
+            raise RuntimeError("Vim server already running")
+
+        library_dir = path.abspath(path.dirname(__file__))
+        vimrc = path.join(library_dir, 'config/vimrc')
+
+        if not path.exists(vimrc):
+            raise RuntimeError("Config file '{0}' not found".format(vimrc))
+
+        cmd = [self.executable,
+            "--servername","{0}".format(self.servername),
+            "-n",
+            "-c","source {0}".format(vimrc)]
+
+        subprocess.call(cmd)
 
     def GetServerlist(self):
-        import subprocess
-        output = subprocess.check_output([self.__executable, '--serverlist'])
+        output = subprocess.check_output([self.executable, '--serverlist'])
         output.decode('utf-8')
         return output
 
     def IsRunning(self):
-        try:
-            servers = self.GetServerlist()
-            servers.index(self.__server_name)
+        servers = self.GetServerlist()
+        if self.servername in servers:
             return True
-        except:
+        else:
             return False
 
-    def IsDiffentFile(self,filename):
-        return filename != self.__filename
+    def NewCommand(self):
+        self.command = []
 
-    def Connect(self):
-        if not self.IsRunning():
-            raise RuntimeError("Server is not running")
+    def AddCommand(self,command):
+        self.command.append(command)
 
-        servers = vimrunner.Server().server_list()
-        index = servers.index(self.__server_name)
-        self.__server = vimrunner.Server(servers[index])
-        self.__vim = self.__server.connect(timeout=1)
+    def RunCommand(self):
+        if len(self.command) > 0:
+            self.Redraw()
+            command = "<Esc>:{0}<Enter>i<Esc>".format(" | ".join(self.command))
+            cmd = [ self.executable,
+                "--servername",self.servername,
+                "--remove-send",command]
 
-    def GotoLine(self,line):
-        cmd_highlight = "3match GdbLocation /\\%{0}l/".format(line)
-        self.__vim.command(cmd_highlight)
-        self.__vim.command("{0}".format(line))
+            subprocess.call(cmd)
 
-    def GotoFile(self,filename):
-        if self.Exists(filename):
-            self.__filename = filename
-            self.__vim.edit(filename)
+    def UpdateBreakpoints(self,breakpoints):
+        if len(breakpoints) > 0:
+            command = ""
+            for breakpoint in breakpoints:
+                if command != "":
+                    command += "\\|"
+                command += "\\%{0}l".format(breakpoint)
+
+            command = "2match GdbBreakpoint /{0}/".format(command)
+            self.AddCommand(command)
         else:
-            raise RuntimeError("Source file '{0}' not found".format(filename))
-
-    def GotoLocation(self,filename,line):
-        self.GotoFile(filename)
-        self.GotoLine(line)
+            self.AddCommand("2match")
 
     def Redraw(self):
-        self.__vim.command("redraw")
+        self.command.append("redraw!")
 
-    def Escape(self):
-        self.__vim.type("\<Esc>")
+    def GotoLine(self,line):
+        command = "3match GdbLocation /\\%{0}l/".format(line)
+        self.AddCommand(command)
 
-    def SetVimrc(self, vimrc):
-        self.__default__vimrc = vimrc
+    def GotoFile(self,filename,check=False):
+        self.AddCommand("edit {0}".format(filename))
 
-    def StartGdb(self):
-        from subprocess import call
+
+class Gdb:
+    def Start(self,check=True):
         import sys
-        cmd = ["gdb","-iex","source {0}".format(self.__gdbinit)] + sys.argv[1:]
-        call(cmd)
+        from os import path
 
-    def StartVim(self):
-        if not self.Exists(self.__vimrc):
-            raise RuntimeError("Config file '{0}' not found".format(self.__vimrc))
+        library_dir = path.abspath(path.dirname(__file__))
+        gdbinit = path.join(library_dir, 'config/gdbinit')
 
-        if not self.IsRunning():
-            from subprocess import call
-            cmd = [self.__executable,
-                "--servername","{0}".format(self.__server_name),
-                "-n",
-                "-c","source {0}".format(self.__vimrc)]
-            print("cmd:", cmd)
-            call(cmd)
-        else:
-            raise RuntimeError("Vim is already running")
-
-    def Start(self):
-        if not self.IsRunning():
-            self.StartVim()
-        else:
-            self.StartGdb()
+        cmd = ["gdb","-iex","source {0}".format(gdbinit)] + sys.argv[1:]
+        subprocess.call(cmd)
 
     def GetValue(self,variable):
         import gdb
@@ -136,54 +118,43 @@ class Vimgdb:
         breaklines = re.findall(match, raw_break_info)
         return breaklines
 
-    def __UpdateBreakpoints(self,breakpoints):
-        if len(breakpoints) > 0:
-            cmd_breakpoint = ""
-            for breakpoint in breakpoints:
-                if cmd_breakpoint != "":
-                    cmd_breakpoint += "\\|"
-                cmd_breakpoint += "\\%{0}l".format(breakpoint)
-            # vim --servername VIMGDB --remote-send ':3match GdbLocation /\%2l/ | 2match GdbBreakpoint /\%3l/<Enter> | redraw!'
-            cmd_highlight = "2match GdbBreakpoint /{0}/".format(cmd_breakpoint)
-            self.__vim.command(cmd_highlight)
+
+class Vimgdb:
+
+    def __init__(self):
+        self.vim = Vim()
+        self.gdb = Gdb()
+
+    def Start(self):
+        if not self.vim.IsRunning():
+            self.vim.Start()
         else:
-            self.__vim.command("2match")
-
-    def __Update(self,fullsource,source,line,force=False):
-        if self.IsDiffentFile(fullsource) or force:
-
-            self.GotoFile(fullsource)
-            breakpoints = self.GetBreakpoints(source)
-            self.__UpdateBreakpoints(breakpoints)
-
-        self.GotoLine(line)
+            self.gdb.Start()
 
     def Update(self,force=False):
-        try:
-            fullsource,source,line = self.GetLocation()
-            self.__Update(fullsource,source,line,force)
-            self.Redraw()
-        except Exception as err:
-            raise RuntimeError("No connection to vim: {0}".format(str(err)))
+        fullsource,source,line = self.gdb.GetLocation()
+        breakpoints = self.gdb.GetBreakpoints(source)
+
+        self.vim.NewCommand()
+        self.vim.GotoFile(fullsource)
+        self.vim.GotoLine(line)
+        self.vim.UpdateBreakpoints(breakpoints)
+        self.vim.RunCommand()
 
     def UpdateBreakpoints(self):
-        try:
-            fullsource,source,line = self.GetLocation()
-            breakpoints = self.GetBreakpoints(source)
-            self.__UpdateBreakpoints(breakpoints)
-            self.Redraw()
-        except Exception as err:
-            raise RuntimeError("No connection to vim: {0}".format(str(err)))
+        breakpoints = self.gdb.GetBreakpoints(source)
 
-    def Communicate(self):
+        self.vim.NewCommand()
+        self.vim.UpdateBreakpoints(breakpoints)
+        self.vim.RunCommand()
+
+    def Synchronize(self):
         try:
-            if self.IsRunning():
-                self.Connect()
-                option = self.GetValue("$_vimgdb_option")
-                if option == "breakpoints":
-                    self.UpdateBreakpoints()
-                else:
-                    self.Update()
+            option = self.GetValue("$_vimgdb_option")
+            if option == "breakpoints":
+                self.UpdateBreakpoints()
+            else:
+                self.Update()
         except Exception as error:
             print("Vimgdb Exception: {0}".format(str(error)))
 

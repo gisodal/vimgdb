@@ -9,18 +9,6 @@ end
 
 python
 
-# time function
-def Timed(timed, function, *args, **kwargs):
-    if timed:
-        import timeit
-        t = timeit.Timer(lambda: function(*args, **kwargs))
-        try:
-            print t.timeit(1)," Seconds"
-        except:
-            t.print_exc()
-    else:
-        function(*args, **kwargs)
-
 from vimgdb import Vimgdb
 import cProfile, pstats
 
@@ -28,18 +16,13 @@ profile = cProfile.Profile()
 profile.enable()
 
 vimgdb = Vimgdb()
-vimgdb.Communicate()
+vimgdb.Synchronize()
 
 profile.disable()
 profile.create_stats()
 stats = pstats.Stats(profile)
 stats.sort_stats('time','cumulative')
 stats.print_stats(10)
-#stats.dump_stats("profile.pstats")
-#
-#profile.print_stats(sort='time')
-#profile.dump_stats("profile2.pstats")
-#Timed(True,vimgdb.Communicate)
 
 end
 end
