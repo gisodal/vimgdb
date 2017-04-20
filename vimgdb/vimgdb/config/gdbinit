@@ -1,4 +1,4 @@
-# vim: set filetype=python:
+# vim: set filetype=python
 
 define _vimgdb
 if $argc >= 1
@@ -9,20 +9,28 @@ end
 
 python
 
-from vimgdb import Vimgdb
-import cProfile, pstats
+try:
+    from vimgdb import Vimgdb
+    import cProfile, pstats
 
-profile = cProfile.Profile()
-profile.enable()
+    profile = cProfile.Profile()
+    profile.enable()
 
-vimgdb = Vimgdb()
-vimgdb.Synchronize()
+    vimgdb = Vimgdb()
+    vimgdb.Synchronize()
 
-profile.disable()
-profile.create_stats()
-stats = pstats.Stats(profile)
-stats.sort_stats('time','cumulative')
-stats.print_stats(10)
+    profile.disable()
+    profile.create_stats()
+    stats = pstats.Stats(profile)
+    stats.sort_stats('time','cumulative')
+    stats.print_stats(10)
+
+except ImportError as e:
+    print("exception: ",str(e))
+    import sys
+    print("Python version :","{0}.{1}.{2}".format(sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
+    print("Search paths   :",sys.path)
+
 
 end
 end

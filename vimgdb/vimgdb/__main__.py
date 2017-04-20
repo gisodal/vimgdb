@@ -1,4 +1,4 @@
-from vimgdb import Vimgdb
+from .vimgdb import main
 
-vimgdb = Vimgdb()
-vimgdb.Start()
+main()
+
