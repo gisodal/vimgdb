@@ -48,10 +48,10 @@ class Vim:
     def RunCommand(self):
         if len(self.command) > 0:
             self.Redraw()
-            command = "<Esc>:{0}<Enter>i<Esc>".format(" | ".join(self.command))
+            command = "<Esc>:{0}<Enter>".format(" | ".join(self.command))
             cmd = [ self.executable,
                 "--servername",self.servername,
-                "--remove-send",command]
+                "--remote-send",command]
 
             subprocess.call(cmd)
 
@@ -74,6 +74,7 @@ class Vim:
     def GotoLine(self,line):
         command = "3match GdbLocation /\\%{0}l/".format(line)
         self.AddCommand(command)
+        self.AddCommand("{0}".format(line))
 
     def GotoFile(self,filename,check=False):
         self.AddCommand("edit {0}".format(filename))
@@ -146,6 +147,7 @@ class Vimgdb:
         self.vim.RunCommand()
 
     def UpdateBreakpoints(self):
+        fullsource,source,line = self.gdb.GetLocation()
         breakpoints = self.gdb.GetBreakpoints(source)
 
         self.vim.NewCommand()
@@ -154,7 +156,7 @@ class Vimgdb:
 
     def Synchronize(self):
         try:
-            option = self.GetValue("$_vimgdb_option")
+            option = self.gdb.GetValue("$_vimgdb_option")
             if option == "breakpoints":
                 self.UpdateBreakpoints()
             else:

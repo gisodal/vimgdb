@@ -1,5 +1,12 @@
 # vim: set filetype=python
 
+define pv
+python
+import sys
+print("Python version :","{0}.{1}.{2}".format(sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
+end
+end
+
 define _vimgdb
 if $argc >= 1
     set $_vimgdb_option = "$arg0"
