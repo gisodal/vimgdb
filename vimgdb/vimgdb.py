@@ -63,18 +63,24 @@ class Vim:
                     command += "\\|"
                 command += "\\%{0}l".format(breakpoint)
 
-            command = "2match GdbBreakpoint /{0}/".format(command)
+            command = "3match GdbBreakpoint /{0}/".format(command)
             self.AddCommand(command)
         else:
-            self.AddCommand("2match")
+            self.AddCommand("3match")
 
     def Redraw(self):
         self.command.append("redraw!")
 
     def GotoLine(self,line):
-        command = "3match GdbLocation /\\%{0}l/".format(line)
-        self.AddCommand(command)
         self.AddCommand("{0}".format(line))
+
+    def UpdateLine(self,line,IsBreakpoint=False):
+        matchgroup = "GdbLocation"
+        if IsBreakpoint:
+            matchgroup = "GdbBreakpointAndLocation"
+
+        command = "2match {0} /\\%{1}l/".format(matchgroup,line)
+        self.AddCommand(command)
 
     def GotoFile(self,filename,check=False):
         self.AddCommand("edit {0}".format(filename))
@@ -120,7 +126,7 @@ class Gdb:
         import gdb
         raw_break_info = gdb.execute('info break',to_string=True)
         match = ' {0}:([0-9]+)'.format(source)
-        breaklines = re.findall(match, raw_break_info)
+        breaklines = [int(i) for i in re.findall(match, raw_break_info)]
         return breaklines
 
 
@@ -142,8 +148,14 @@ class Vimgdb:
 
         self.vim.NewCommand()
         self.vim.GotoFile(fullsource)
-        self.vim.GotoLine(line)
+        if line in breakpoints:
+            breakpoints.remove(line)
+            self.vim.UpdateLine(line,IsBreakpoint=True)
+        else:
+            self.vim.UpdateLine(line,IsBreakpoint=False)
         self.vim.UpdateBreakpoints(breakpoints)
+        self.vim.GotoLine(line)
+
         self.vim.RunCommand()
 
     def UpdateBreakpoints(self):
@@ -151,6 +163,11 @@ class Vimgdb:
         breakpoints = self.gdb.GetBreakpoints(source)
 
         self.vim.NewCommand()
+        if line in breakpoints:
+            breakpoints.remove(line)
+            self.vim.UpdateLine(line,IsBreakpoint=True)
+        else:
+            self.vim.UpdateLine(line,IsBreakpoint=False)
         self.vim.UpdateBreakpoints(breakpoints)
         self.vim.RunCommand()
 

@@ -1,9 +1,9 @@
 autocmd ColorScheme * highlight GdbBreakpoint ctermfg=Red ctermbg=None cterm=Bold
 highlight GdbBreakpoint ctermfg=Red ctermbg=None cterm=Bold
-autocmd ColorScheme * highlight GdbLocation ctermfg=None ctermbg=235 cterm=None
-highlight GdbLocation ctermfg=None ctermbg=235 cterm=None
-autocmd ColorScheme * highlight GdbBreakpointAndLocation ctermfg=Red ctermbg=235 cterm=Bold
-highlight GdbBreakpointAndLocation ctermfg=Red ctermbg=235 cterm=Bold
+autocmd ColorScheme * highlight GdbLocation ctermfg=None ctermbg=238 cterm=None
+highlight GdbLocation ctermfg=None ctermbg=238 cterm=None
+autocmd ColorScheme * highlight GdbBreakpointAndLocation ctermfg=Red ctermbg=238 cterm=Bold
+highlight GdbBreakpointAndLocation ctermfg=Red ctermbg=238 cterm=Bold
 
 set shortmess=at
 set sidescroll=1

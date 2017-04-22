@@ -1,58 +1,56 @@
 # vim: set filetype=python
-
-define pv
-python
-import sys
-print("Python version :","{0}.{1}.{2}".format(sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
-end
-end
+set $_vimgdb_option = "*******************"
 
 define _vimgdb
 if $argc >= 1
     set $_vimgdb_option = "$arg0"
 else
-    set $_vimgdb_option = "vimgdb init option"
+    set $_vimgdb_option = ""
 end
 
 python
 
 try:
-    from vimgdb import Vimgdb
-    import cProfile, pstats
+    import sys
+    import os
 
-    profile = cProfile.Profile()
-    profile.enable()
+    sys.path.append(os.getcwd())
+    from vimgdb import Vimgdb
 
     vimgdb = Vimgdb()
     vimgdb.Synchronize()
 
-    profile.disable()
-    profile.create_stats()
-    stats = pstats.Stats(profile)
-    stats.sort_stats('time','cumulative')
-    stats.print_stats(10)
+except ImportError:
+    print("** vimgdb not found **")
+    print("Python {0}.{1}.{2} could not find vimgdb in:".format(
+            sys.version_info.major,
+            sys.version_info.minor,
+            sys.version_info.micro))
+    for directory in sys.path:
+        print("    {0}".format(directory))
 
-except ImportError as e:
-    print("exception: ",str(e))
-    import sys
-    print("Python version :","{0}.{1}.{2}".format(sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
-    print("Search paths   :",sys.path)
-
+    sys.exit(1)
 
 end
 end
-
-alias vim = _vimgdb
 
 define hookpost-break
     _vimgdb breakpoints
 end
 
-define hookpost-clear
+define hookpost-tbreak
     _vimgdb breakpoints
 end
 
-define hookpost-delete
+define hookpost-disable
+    _vimgdb breakpoints
+end
+
+define hookpost-enable
+    _vimgdb breakpoints
+end
+
+define hookpost-clear
     _vimgdb breakpoints
 end
 
