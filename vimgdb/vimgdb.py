@@ -90,15 +90,14 @@ class Gdb:
     def __init__(self):
         self.executable = "gdb"
 
-    def Start(self,check=True):
-        import sys
+    def Start(self,args=[],check=True):
         from os import path
 
         library_dir = path.abspath(path.dirname(__file__))
         gdbinit = path.join(library_dir, 'config/gdbinit')
 
         cmd = [self.executable,
-            "-iex","source {0}".format(gdbinit)] + sys.argv[1:]
+            "-iex","source {0}".format(gdbinit)] + args
         subprocess.call(cmd)
 
     def GetValue(self,variable):
@@ -136,11 +135,11 @@ class Vimgdb:
         self.vim = Vim()
         self.gdb = Gdb()
 
-    def Start(self):
+    def Start(self,args=[]):
         if not self.vim.IsRunning():
             self.vim.Start()
         else:
-            self.gdb.Start()
+            self.gdb.Start(args)
 
     def Update(self,force=False):
         fullsource,source,line = self.gdb.GetLocation()
@@ -181,10 +180,10 @@ class Vimgdb:
         except Exception as error:
             print("Vimgdb Exception: {0}".format(str(error)))
 
-
 def main():
+    import sys
     vimgdb = Vimgdb()
-    vimgdb.Start()
+    vimgdb.Start(sys.argv[1:])
 
 if __name__ == "__main__":
     main()
