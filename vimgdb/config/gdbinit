@@ -34,6 +34,8 @@ except ImportError:
 end
 end
 
+alias sync = _vimgdb
+
 define hookpost-break
     _vimgdb breakpoints
 end

@@ -63,10 +63,10 @@ class Vim:
                     command += "\\|"
                 command += "\\%{0}l".format(breakpoint)
 
-            command = "3match GdbBreakpoint /{0}/".format(command)
+            command = "match GdbBreakpoint /{0}/".format(command)
             self.AddCommand(command)
         else:
-            self.AddCommand("3match")
+            self.AddCommand("match")
 
     def Redraw(self):
         self.command.append("redraw!")
