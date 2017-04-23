@@ -5,5 +5,6 @@ setup(
     zip_safe=False,
     license='MIT',
     packages=['vimgdb'],
-    package_data={'vimgdb': ['config/vimrc','config/gdbinit']}
+    package_data={'vimgdb': ['config/vimrc','config/gdbinit']},
+    scripts = ['bin/vimgdb']
     )
