@@ -32,26 +32,11 @@ From a different terminal, start gdb:
     > python -m vimgdb [path/to/debug/binary]
 
 
-Alternatively, put the commands in a (bash) script called `vimgdb`:
-
-    #!/bin/bash
-
-    python -m vimgdb $@
-
-Make the script executable:
-
-    > chmod +x vimgdb
-
-Then run Vim/gdb with:
-
-    > vimgdb [path/to/debug/binary]
-
-
 ## How it works
 
 Vimgdb starts Vim as a server such that gdb can connect to it. Gdb is started upon the next call to Vimgdb if it is confirmed that the Vim server is running. Information about the current line of execution is passed from gdb to Vim upon triggering a hook, e.g., hitting a breakpoint, stepping though code, moving up and down the call stack, etc. The corresponding file will be opened in Vim, breakpoints and current  highlighted
 
 ## What it does not do
 
-Be aware that Vim needs to be able to execute the commands it receives. For instance, if you edit a file without saving, Vim probits changing to different file. This will obviously distrub stepping through code.
+Be aware that Vim needs to be able to execute the commands it receives. For instance, if you edit a file without saving, Vim prohibits changing to a different file. This will obviously distrub stepping through code.
 
