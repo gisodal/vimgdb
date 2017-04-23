@@ -13,8 +13,9 @@ Use vim to visually step through source code with GNU Gdb.
 
 GNU gdb is a great tool to debug your code. Many programmers develop their code using the terminal editor Vim, yet have to leave their beloved (often finely tuned) editor in order to start debugging efforts, because terminal options to visually step through code are limited to the gdb TUI or cgdb. Vimgdb solves this, by connecting gdb to your editing session in Vim.
 
+Note: The example demonstrates Vimgdb while using Tmux, which allows the fast creation and navigation of vertical and horizontal terminal splits. Using it allows Vim and gdb to be opened side by side.
 
-## Usage
+## Installation
 
 Vimgdb can be run from its source directory, but requires installation to be run from anywhere:
 

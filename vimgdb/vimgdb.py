@@ -8,7 +8,7 @@ class Vim:
         self.executable = "vim"
         self.command = []
 
-    def Start(self,check=True):
+    def Start(self,args=[],check=True):
         from os import path
 
         if check and self.IsRunning():
@@ -87,6 +87,7 @@ class Vim:
 
 
 class Gdb:
+
     def __init__(self):
         self.executable = "gdb"
 
@@ -137,7 +138,7 @@ class Vimgdb:
 
     def Start(self,args=[]):
         if not self.vim.IsRunning():
-            self.vim.Start()
+            self.vim.Start(args)
         else:
             self.gdb.Start(args)
 
