@@ -5,7 +5,7 @@ Use vim to visually step through source code with GNU Gdb.
 <br>
 
 <p align="center">
-  <img style="max-width: 100%;" src="https://raw.githubusercontent.com/gisodal/vimgdb/figures/demostration.gif?token=AKPkVaEQmxveQXbaAh-9jru_Mn0Zw-tCks5ZBQlNwA%3D%3D" />
+  <img style="max-width: 100%;" src="https://raw.githubusercontent.com/gisodal/vimgdb/figures/demo.gif?token=AKPkVf08cJWjnufUHu_1LHwexig4ct77ks5ZBkymwA%3D%3D" />
 </p>
 
 
