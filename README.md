@@ -1,6 +1,6 @@
 # Vimgdb
 
-Use vim to visually step through source code with GNU Gdb.
+Use Vim to visually step through source code with GNU Gdb.
 
 <br>
 
