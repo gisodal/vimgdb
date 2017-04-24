@@ -1,4 +1,5 @@
 from .vimgdb import main
 
-main()
+import sys
+main(sys.argv[1:])
 

@@ -181,11 +181,11 @@ class Vimgdb:
         except Exception as error:
             print("Vimgdb Exception: {0}".format(str(error)))
 
-def main():
-    import sys
+def main(args):
     vimgdb = Vimgdb()
-    vimgdb.Start(sys.argv[1:])
+    vimgdb.Start(args)
 
 if __name__ == "__main__":
-    main()
+    import sys
+    main(sys.argv[1:])
 

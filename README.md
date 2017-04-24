@@ -11,13 +11,13 @@ Use vim to visually step through source code with GNU Gdb.
 
 ## Synopsis
 
-[GNU gdb](https://www.gnu.org/software/gdb/)  is a great tool to debug your code. Many programmers develop their code using the terminal editor [Vim](http://www.vim.org/), yet have to leave their beloved (often finely tuned) editor in order to start debugging efforts, because terminal options to visually step through code are limited to the gdb [TUI](ftp://ftp.gnu.org/old-gnu/Manuals/gdb/html_chapter/gdb_19.html) or [cgdb](https://cgdb.github.io/). Vimgdb solves this, by connecting gdb to your editing session in Vim.
+[GNU Gdb](https://www.gnu.org/software/gdb/)  is a great tool to debug your code. Many programmers develop their code using the terminal editor [Vim](http://www.vim.org/), yet have to leave their beloved (often finely tuned) editor in order to start debugging efforts, because terminal options to visually step through code are limited to the Gdb [TUI](ftp://ftp.gnu.org/old-gnu/Manuals/gdb/html_chapter/gdb_19.html) or [cgdb](https://cgdb.github.io/). Vimgdb solves this, by connecting Gdb to your editing session in Vim.
 
-Note: The example demonstrates Vimgdb while using [Tmux](https://tmux.github.io/), which allows the fast creation and navigation of vertical and horizontal terminal splits. Using it allows Vim and gdb to be opened side by side.
+Note: The example demonstrates Vimgdb while using [Tmux](https://tmux.github.io/), which allows the fast creation and navigation of vertical and horizontal terminal splits. Using it allows Vim and Gdb to be opened side by side.
 
 ## Installation
 
-Vimgdb can be run from its source directory, but requires installation to be run from anywhere:
+Vimgdb can be run from the root of its source directory by typing `bin/vimgdb`, but requires installation to be run from anywhere:
 
     > python setup.py install
 
@@ -26,16 +26,16 @@ Vimgdb can be run from its source directory, but requires installation to be run
 
 Start Vim:
 
-    > python -m vimgdb
+    > vimgdb [vim parameters]
 
-From a different terminal, start gdb:
+From a different terminal, start Gdb:
 
-    > python -m vimgdb [path/to/debug/binary]
+    > vimgdb [path/to/debug/binary]
 
 
 ## How it works
 
-Vimgdb starts Vim as a server such that gdb can connect to it. Gdb is started upon the next call to Vimgdb if it is confirmed that the Vim server is running. Information about the current line of execution is passed from gdb to Vim upon triggering a hook, e.g., hitting a breakpoint, stepping though code, moving up and down the call stack, etc. The corresponding file will be opened in Vim, breakpoints highlighted and the current line of execution indicated.
+Vimgdb starts Vim as a server such that Gdb can connect to it. Gdb is started upon the next call to Vimgdb if it is confirmed that the Vim server is running. Information about the current line of execution is passed from Gdb to Vim upon triggering a hook, e.g., hitting a breakpoint, stepping though code, moving up and down the call stack, etc. The corresponding file will be opened in Vim, breakpoints highlighted and the current line of execution indicated.
 
 ## What it does not do
 

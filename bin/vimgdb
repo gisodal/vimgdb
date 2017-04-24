@@ -1,4 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env python
 
-python -m vimgdb $@
+import sys
+import os
+
+sys.path.append(os.getcwd())
+
+from vimgdb import main
+
+main(sys.argv[1:])
 
