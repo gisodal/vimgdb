@@ -23,7 +23,7 @@ class Vim:
         cmd = [self.executable,
             "--servername","{0}".format(self.servername),
             "-n",
-            "-c","source {0}".format(vimrc)]
+            "-c","source {0}".format(vimrc)] + args
 
         subprocess.call(cmd)
 
