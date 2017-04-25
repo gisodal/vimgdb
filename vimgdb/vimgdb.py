@@ -84,6 +84,7 @@ class Vim:
 
     def GotoFile(self,filename,check=False):
         self.AddCommand("edit {0}".format(filename))
+        #self.Redraw()
 
 
 class Gdb:
@@ -125,8 +126,18 @@ class Gdb:
         import re
         import gdb
         raw_break_info = gdb.execute('info break',to_string=True)
-        match = ' {0}:([0-9]+)'.format(source)
-        breaklines = [int(i) for i in re.findall(match, raw_break_info)]
+        match = '([0-9]+)[ ]*([^ ]+)[ ]*([^ ]+)[ ]*([^ ]+).*{0}:([0-9]+)'.format(source)
+        breakpoints = re.findall(match, raw_break_info)
+        breaklines = []
+        for breakpoint in breakpoints:
+            num =  breakpoint[0]
+            type = breakpoint[1]
+            disp = breakpoint[2]
+            enabled = breakpoint[3]
+            line = breakpoint[4]
+            if type == "breakpoint" and enabled == "y":
+                breaklines.append(int(line))
+
         return breaklines
 
 

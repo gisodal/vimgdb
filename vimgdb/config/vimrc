@@ -5,9 +5,10 @@ highlight GdbLocation ctermfg=None ctermbg=238 cterm=None
 autocmd ColorScheme * highlight GdbBreakpointAndLocation ctermfg=Red ctermbg=238 cterm=Bold
 highlight GdbBreakpointAndLocation ctermfg=Red ctermbg=238 cterm=Bold
 
-set shortmess=at
+set shortmess=a
 set sidescroll=1
 set sidescrolloff=10
 set scrolloff=10
+set cmdheight=1
 set number
 

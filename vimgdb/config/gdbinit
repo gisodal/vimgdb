@@ -1,6 +1,13 @@
 # vim: set filetype=python
-set $_vimgdb_option = "*******************"
 
+# allocate gdb convenience variables
+python
+variables = [ "$_vimgdb_option", "$_vimgdb_src" ]
+for variable in variables:
+    gdb.execute("set {0} = \"{1}\"".format(variable,"\\0"*256))
+end
+
+# vimgdb interface
 define _vimgdb
 if $argc >= 1
     set $_vimgdb_option = "$arg0"
