@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import subprocess
+import os
 
 class Vim:
 
@@ -53,7 +54,8 @@ class Vim:
                 "--servername",self.servername,
                 "--remote-send",command]
 
-            subprocess.call(cmd)
+            DEVNULL = open(os.devnull, 'w')
+            return subprocess.call(cmd,stdout=DEVNULL,stderr=subprocess.STDOUT)
 
     def UpdateBreakpoints(self,breakpoints):
         if len(breakpoints) > 0:
@@ -84,13 +86,13 @@ class Vim:
 
     def GotoFile(self,filename,check=False):
         self.AddCommand("edit {0}".format(filename))
-        #self.Redraw()
-
 
 class Gdb:
 
     def __init__(self):
         self.executable = "gdb"
+        self.src = "$_vimgdb_src"
+        self.option = "$_vimgdb_option"
 
     def Start(self,args=[],check=True):
         from os import path
@@ -104,10 +106,20 @@ class Gdb:
 
     def GetValue(self,variable):
         import gdb
+        import re
         value = str(gdb.parse_and_eval("{0}".format(variable)))
-        value = value.replace("\"","")
-        value = value.split("\\0")[0]
-        return value
+        value = re.findall('"(.*)"', value)
+        if len(value) > 0:
+            return value[0]
+        else:
+            return ""
+
+    def SetValue(self,variable,value):
+        import gdb
+        MAX = 250
+        if len(value) > MAX:
+            raise RuntimeError("Cannot store '{0}' in {1}: value longer than {2} characters".format(value,variable,MAX))
+        gdb.execute("set {0} = \"{1}\"".format(variable,value))
 
     def GetLocation(self):
         import gdb
@@ -155,10 +167,15 @@ class Vimgdb:
 
     def Update(self,force=False):
         fullsource,source,line = self.gdb.GetLocation()
-        breakpoints = self.gdb.GetBreakpoints(source)
 
         self.vim.NewCommand()
-        self.vim.GotoFile(fullsource)
+        vim_source = self.gdb.GetValue(self.gdb.src)
+
+        update_file = force or vim_source != fullsource
+        if update_file:
+            self.vim.GotoFile(fullsource)
+
+        breakpoints = self.gdb.GetBreakpoints(source)
         if line in breakpoints:
             breakpoints.remove(line)
             self.vim.UpdateLine(line,IsBreakpoint=True)
@@ -167,30 +184,13 @@ class Vimgdb:
         self.vim.UpdateBreakpoints(breakpoints)
         self.vim.GotoLine(line)
 
-        self.vim.RunCommand()
+        ret = self.vim.RunCommand()
+        if ret != 0:
+            self.gdb.SetValue(self.gdb.src,"")
+        elif update_file:
+            self.gdb.SetValue(self.gdb.src,fullsource)
 
-    def UpdateBreakpoints(self):
-        fullsource,source,line = self.gdb.GetLocation()
-        breakpoints = self.gdb.GetBreakpoints(source)
-
-        self.vim.NewCommand()
-        if line in breakpoints:
-            breakpoints.remove(line)
-            self.vim.UpdateLine(line,IsBreakpoint=True)
-        else:
-            self.vim.UpdateLine(line,IsBreakpoint=False)
-        self.vim.UpdateBreakpoints(breakpoints)
-        self.vim.RunCommand()
-
-    def Synchronize(self):
-        try:
-            option = self.gdb.GetValue("$_vimgdb_option")
-            if option == "breakpoints":
-                self.UpdateBreakpoints()
-            else:
-                self.Update()
-        except Exception as error:
-            print("Vimgdb Exception: {0}".format(str(error)))
+        return ret
 
 def main(args):
     vimgdb = Vimgdb()

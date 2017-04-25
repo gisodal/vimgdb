@@ -25,7 +25,15 @@ try:
     from vimgdb import Vimgdb
 
     vimgdb = Vimgdb()
-    vimgdb.Synchronize()
+
+    option = vimgdb.gdb.GetValue(vimgdb.gdb.option)
+    force_update = False;
+    if option == "force":
+        force_update = True
+
+    ret = vimgdb.Update(force=force_update)
+    #if ret != 0:
+    #    print("Vimgdb update failed")
 
 except ImportError:
     print("** vimgdb not found **")
@@ -37,30 +45,34 @@ except ImportError:
         print("    {0}".format(directory))
 
     sys.exit(1)
+except Exception as error:
+    print("Vimgdb Exception: {0}".format(str(error)))
 
 end
 end
 
-alias sync = _vimgdb
+define sync
+    _vimgdb force
+end
 
 define hookpost-break
-    _vimgdb breakpoints
+    _vimgdb
 end
 
 define hookpost-tbreak
-    _vimgdb breakpoints
+    _vimgdb
 end
 
 define hookpost-disable
-    _vimgdb breakpoints
+    _vimgdb
 end
 
 define hookpost-enable
-    _vimgdb breakpoints
+    _vimgdb
 end
 
 define hookpost-clear
-    _vimgdb breakpoints
+    _vimgdb
 end
 
 define hook-stop
