@@ -57,41 +57,65 @@ class Vim:
             DEVNULL = open(os.devnull, 'w')
             return subprocess.call(cmd,stdout=DEVNULL,stderr=subprocess.STDOUT)
 
-    def UpdateBreakpoints(self,breakpoints):
-        if len(breakpoints) > 0:
-            command = ""
-            for breakpoint in breakpoints:
-                if command != "":
-                    command += "\\|"
-                command += "\\%{0}l".format(breakpoint)
+    def RemoveSigns(self,sign_id):
+        self.AddCommand("execute \"sign unplace {0}\"".format(sign_id))
 
-            command = "match GdbBreakpoint /{0}/".format(command)
-            self.AddCommand(command)
-        else:
-            self.AddCommand("match")
+    def RemoveSign(self,sign_id):
+        self.AddCommand("execute \"sign unplace {0} file=\" . expand(\"%:p\")".format(sign_id))
+
+    def AddSign(self,line,sign_type,sign_id=-1):
+        if sign_id < 0:
+            sign_id = line
+        self.AddCommand("execute \"sign place {0} line={1} name={2} file=\" . expand(\"%:p\")".format(sign_id,line,sign_type))
+
+    def EnableSignColumn(self):
+        self.AddSign(1,"VimgdbDummy",999999)
+
+    def DisableSignColumn(self):
+        self.AddCommand("execute \"sign unplace * file=\" . expand(\"%:p\")")
+
+    def DisableSignColumns(self):
+        self.AddCommand("execute \"sign unplace *\"")
+
+    def InitSignColumn(self):
+        self.DisableSignColumn()
+        self.EnableSignColumn()
+
+    def RemoveBreakpoints(self,breakpoints):
+        for breakline in breakpoints:
+            self.RemoveSign(breakline)
+
+    def AddBreakpoints(self,breakpoints):
+        for breakline in breakpoints:
+            self.AddSign(breakline,"VimgdbBreakpointSign")
+
+    def UpdateBreakpoints(self,add_breakpoints=[],remove_breakpoints=[]):
+        self.AddBreakpoints(add_breakpoints)
+        self.RemoveBreakpoints(remove_breakpoints)
 
     def Redraw(self):
         self.command.append("redraw!")
 
     def GotoLine(self,line):
-        self.AddCommand("{0}".format(line))
+        if line > 1:
+            self.AddCommand("{0}".format(line))
 
-    def UpdateLine(self,line,IsBreakpoint=False):
-        matchgroup = "GdbLocation"
-        if IsBreakpoint:
-            matchgroup = "GdbBreakpointAndLocation"
-
-        command = "2match {0} /\\%{1}l/".format(matchgroup,line)
-        self.AddCommand(command)
+    def UpdateLine(self,line):
+        if line > 1:
+            sign_id = 999998
+            self.RemoveSigns(sign_id)
+            self.AddSign(line,"VimgdbLocationSign",sign_id)
 
     def GotoFile(self,filename,check=False):
         self.AddCommand("edit {0}".format(filename))
+
 
 class Gdb:
 
     def __init__(self):
         self.executable = "gdb"
         self.src = "$_vimgdb_src"
+        self.breakpoints = "$_vimgdb_breakpoints"
         self.option = "$_vimgdb_option"
 
     def Start(self,args=[],check=True):
@@ -137,20 +161,38 @@ class Gdb:
     def GetBreakpoints(self,source):
         import re
         import gdb
-        raw_break_info = gdb.execute('info break',to_string=True)
+        raw_break_info = gdb.execute('info break',to_string=True).split('\n')
         match = '([0-9]+)[ ]*([^ ]+)[ ]*([^ ]+)[ ]*([^ ]+).*{0}:([0-9]+)'.format(source)
-        breakpoints = re.findall(match, raw_break_info)
+        breakpoints = [ re.findall(match,line) for line in raw_break_info ]
+        breakpoints = [ breakpoint[0] for breakpoint in breakpoints if breakpoint ]
+
         breaklines = []
+        enabled_breakpoint = {}
         for breakpoint in breakpoints:
             num =  breakpoint[0]
             type = breakpoint[1]
             disp = breakpoint[2]
             enabled = breakpoint[3]
             line = breakpoint[4]
-            if type == "breakpoint" and enabled == "y":
-                breaklines.append(int(line))
+            if type == "breakpoint":
+                breakline = int(line)
+                breaklines.append(breakline)
+                enabled_breakpoint[breakline] = bool(enabled == "y");
 
-        return breaklines
+        return breaklines,enabled_breakpoint
+
+    def GetStoredBreakpoints(self):
+        breakpoints = [int(i) for i in self.GetValue(self.breakpoints).split(':')]
+        return breakpoints
+
+    def StoreBreakpoints(self,breakpoints):
+        self.SetValue(self.breakpoints,":".join(str(breakline) for breakline in breakpoints))
+
+    def GetStoredFile(self):
+        return self.GetValue(self.src)
+
+    def StoreFile(self,filename):
+        self.SetValue(self.src,filename)
 
 
 class Vimgdb:
@@ -166,29 +208,47 @@ class Vimgdb:
             self.gdb.Start(args)
 
     def Update(self,force=False):
+        # get current location in gdb
         fullsource,source,line = self.gdb.GetLocation()
 
+        # create new series of vim commands
         self.vim.NewCommand()
-        vim_source = self.gdb.GetValue(self.gdb.src)
 
+        # get last known open file in vim
+        vim_source = self.gdb.GetStoredFile()
         update_file = force or vim_source != fullsource
+
+        # update file open in vim
         if update_file:
             self.vim.GotoFile(fullsource)
 
-        breakpoints = self.gdb.GetBreakpoints(source)
-        if line in breakpoints:
-            breakpoints.remove(line)
-            self.vim.UpdateLine(line,IsBreakpoint=True)
+        # update breakpoints
+        breakpoints,enabled = self.gdb.GetBreakpoints(source)
+        if update_file:
+            self.vim.InitSignColumn()
+            self.vim.UpdateBreakpoints(breakpoints)
         else:
-            self.vim.UpdateLine(line,IsBreakpoint=False)
-        self.vim.UpdateBreakpoints(breakpoints)
+            stored_breakpoints = self.gdb.GetStoredBreakpoints()
+            add_breakpoints = list(set(breakpoints) - set(stored_breakpoints))
+            remove_breakpoints = list(set(stored_breakpoints) - set(breakpoints))
+            self.vim.UpdateBreakpoints(add_breakpoints,remove_breakpoints)
+
+        # update current location in source
+        self.vim.UpdateLine(line)
         self.vim.GotoLine(line)
 
+        # execute commands in vim
         ret = self.vim.RunCommand()
+
+        # store state in gdb
         if ret != 0:
-            self.gdb.SetValue(self.gdb.src,"")
+            self.gdb.StoreFile("")
+            self.gdb.StoreBreakpoints([])
         elif update_file:
-            self.gdb.SetValue(self.gdb.src,fullsource)
+            self.gdb.StoreFile(fullsource)
+            self.gdb.StoreBreakpoints(breakpoints)
+        else:
+            self.gdb.StoreBreakpoints(breakpoints)
 
         return ret
 

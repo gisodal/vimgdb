@@ -1,9 +1,15 @@
-autocmd ColorScheme * highlight GdbBreakpoint ctermfg=Red ctermbg=None cterm=Bold
-highlight GdbBreakpoint ctermfg=Red ctermbg=None cterm=Bold
-autocmd ColorScheme * highlight GdbLocation ctermfg=None ctermbg=238 cterm=None
-highlight GdbLocation ctermfg=None ctermbg=238 cterm=None
-autocmd ColorScheme * highlight GdbBreakpointAndLocation ctermfg=Red ctermbg=238 cterm=Bold
-highlight GdbBreakpointAndLocation ctermfg=Red ctermbg=238 cterm=Bold
+autocmd  ColorScheme  *  highlight  VimgdbBreakpoint          ctermfg=Red   ctermbg=None  cterm=Bold
+autocmd  ColorScheme  *  highlight  VimgdbDisabledBreakpoint  ctermfg=238   ctermbg=None  cterm=Bold
+autocmd  ColorScheme  *  highlight  VimgdbLocation            ctermfg=None  ctermbg=238   cterm=None
+
+highlight  VimgdbBreakpoint          ctermfg=Red   ctermbg=None  cterm=Bold
+highlight  VimgdbDisabledBreakpoint  ctermfg=238   ctermbg=None  cterm=Bold
+highlight  VimgdbLocation            ctermfg=None  ctermbg=238   cterm=None
+
+sign  define  VimgdbBreakpointSign        text=⛔                 texthl=VimgdbBreakpoint
+sign  define  VimgdbPasiveBreakpointSign  text=⛔                 texthl=VimgdbPasiveBreakpoint
+sign  define  VimgdbLocationSign          linehl=VimgdbLocation
+sign  define  VimgdbDummy
 
 set shortmess=a
 set sidescroll=1

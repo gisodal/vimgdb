@@ -2,7 +2,7 @@
 
 # allocate gdb convenience variables
 python
-variables = [ "$_vimgdb_option", "$_vimgdb_src" ]
+variables = [ "$_vimgdb_option", "$_vimgdb_src", "$_vimgdb_breakpoints" ]
 for variable in variables:
     gdb.execute("set {0} = \"{1}\"".format(variable,"\\0"*256))
 end
@@ -46,7 +46,9 @@ except ImportError:
 
     sys.exit(1)
 except Exception as error:
+    import traceback
     print("Vimgdb Exception: {0}".format(str(error)))
+    print(traceback.format_exc())
 
 end
 end
