@@ -6,9 +6,9 @@ highlight  VimgdbBreakpoint          ctermfg=Red   ctermbg=None  cterm=Bold
 highlight  VimgdbDisabledBreakpoint  ctermfg=238   ctermbg=None  cterm=Bold
 highlight  VimgdbLocation            ctermfg=None  ctermbg=238   cterm=None
 
-sign  define  VimgdbBreakpointSign        text=⛔                 texthl=VimgdbBreakpoint
-sign  define  VimgdbPasiveBreakpointSign  text=⛔                 texthl=VimgdbPasiveBreakpoint
-sign  define  VimgdbLocationSign          linehl=VimgdbLocation
+sign  define  VimgdbBreakpointSign          text=⛔                 texthl=VimgdbBreakpoint
+sign  define  VimgdbDisabledBreakpointSign  text=⛔                 texthl=VimgdbDisabledBreakpoint
+sign  define  VimgdbLocationSign            linehl=VimgdbLocation
 sign  define  VimgdbDummy
 
 set shortmess=a
@@ -17,4 +17,5 @@ set sidescrolloff=10
 set scrolloff=10
 set cmdheight=1
 set number
+set lazyredraw
 

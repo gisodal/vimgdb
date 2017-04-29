@@ -176,13 +176,14 @@ class Gdb:
             line = breakpoint[4]
             if type == "breakpoint":
                 breakline = int(line)
-                breaklines.append(breakline)
                 enabled_breakpoint[breakline] = bool(enabled == "y");
+                if enabled_breakpoint[breakline]:
+                    breaklines.append(breakline)
 
         return breaklines,enabled_breakpoint
 
     def GetStoredBreakpoints(self):
-        breakpoints = [int(i) for i in self.GetValue(self.breakpoints).split(':')]
+        breakpoints = [int(i) for i in self.GetValue(self.breakpoints).split(':') if i]
         return breakpoints
 
     def StoreBreakpoints(self,breakpoints):
@@ -206,6 +207,11 @@ class Vimgdb:
             self.vim.Start(args)
         else:
             self.gdb.Start(args)
+
+    def Disable(self):
+        self.vim.NewCommand()
+        self.vim.DisableSignColumns()
+        self.vim.RunCommand()
 
     def Update(self,force=False):
         # get current location in gdb
