@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='vimgdb',
-    version='1.0.0',
+    version='1.0.1',
     zip_safe=False,
     description='Use Vim to visually step through source code with GNU Gdb.',
     keywords='Vim Gdb Tmux debugger',
