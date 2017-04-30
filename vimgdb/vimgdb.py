@@ -7,7 +7,7 @@ class Vim:
     def __init__(self):
         self.servername = u"VIMGDB"
         self.executable = "vim"
-        self.command = []
+        self.debug = False
 
     def Start(self,args=[],check=True):
         from os import path
@@ -49,33 +49,47 @@ class Vim:
     def RunCommand(self):
         if len(self.command) > 0:
             self.Redraw()
-            command = "<Esc>:{0}<Enter>".format(" | ".join(self.command))
+            function = [ 'silent execute "function! Vimgdb()' ]
+            function.extend([ cmd.replace('"','\\"') for cmd in self.command] )
+            function.extend(['endfunction"'])
+            function = '\\n'.join(function)
+            function = [function, 'call Vimgdb()']
+            function = " | ".join(function)
+
+            command = '<Esc>:{0}<Enter>'.format(function)
             cmd = [ self.executable,
                 "--servername",self.servername,
                 "--remote-send",command]
 
-            DEVNULL = open(os.devnull, 'w')
-            return subprocess.call(cmd,stdout=DEVNULL,stderr=subprocess.STDOUT)
+            if self.debug:
+                print("*** Commands sent **************************************\n   ",
+                    "\n    ".join(self.command),
+                    "\n********************************************************")
+
+                return subprocess.call(cmd)
+            else:
+                DEVNULL = open(os.devnull, 'w')
+                return subprocess.call(cmd,stdout=DEVNULL,stderr=subprocess.STDOUT)
 
     def RemoveSigns(self,sign_id):
-        self.AddCommand("execute \"sign unplace {0}\"".format(sign_id))
+        self.AddCommand('execute "sign unplace {0}"'.format(sign_id))
 
     def RemoveSign(self,sign_id):
-        self.AddCommand("execute \"sign unplace {0} file=\" . expand(\"%:p\")".format(sign_id))
+        self.AddCommand('execute "sign unplace {0} file=" . expand("%:p")'.format(sign_id))
 
     def AddSign(self,line,sign_type,sign_id=-1):
         if sign_id < 0:
             sign_id = line
-        self.AddCommand("execute \"sign place {0} line={1} name={2} file=\" . expand(\"%:p\")".format(sign_id,line,sign_type))
+        self.AddCommand('execute "sign place {0} line={1} name={2} file=" . expand("%:p")'.format(sign_id,line,sign_type))
 
     def EnableSignColumn(self):
         self.AddSign(1,"VimgdbDummy",999999)
 
     def DisableSignColumn(self):
-        self.AddCommand("execute \"sign unplace * file=\" . expand(\"%:p\")")
+        self.AddCommand('execute "sign unplace * file=" . expand("%:p")')
 
     def DisableSignColumns(self):
-        self.AddCommand("execute \"sign unplace *\"")
+        self.AddCommand('execute "sign unplace *"')
 
     def InitSignColumn(self):
         self.DisableSignColumn()
@@ -98,7 +112,7 @@ class Vim:
 
     def GotoLine(self,line):
         if line > 1:
-            self.AddCommand("{0}".format(line))
+            self.AddCommand("call cursor({0},1)".format(line))
 
     def UpdateLine(self,line):
         if line > 1:
@@ -125,7 +139,7 @@ class Gdb:
         gdbinit = path.join(library_dir, 'config/gdbinit')
 
         cmd = [self.executable,
-            "-iex","source {0}".format(gdbinit)] + args
+            "-q","-iex","source {0}".format(gdbinit)] + args
         subprocess.call(cmd)
 
     def GetValue(self,variable):
