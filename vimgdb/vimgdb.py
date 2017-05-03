@@ -2,6 +2,17 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import subprocess
 import os
 
+def IsBinary(filename):
+    import mimetypes
+    import os
+    if os.path.isfile(filename):
+        mtype = mimetypes.guess_type(filename)
+        if mtype == None or "text" not in str(mtype[0]):
+            return True
+
+    return False
+
+
 class Vim:
 
     def __init__(self):
@@ -20,6 +31,11 @@ class Vim:
 
         if not path.exists(vimrc):
             raise RuntimeError("Config file '{0}' not found".format(vimrc))
+
+        for arg in args:
+            if IsBinary(arg):
+                print("File '{0}' is not a text file".format(arg))
+                from sys import exit; exit(1)
 
         cmd = [self.executable,
             "--servername","{0}".format(self.servername),
