@@ -58,6 +58,7 @@ define sync
     _vimgdb force
 end
 
+# gdb hooks
 define hook-quit
     _vimgdb disable
 end
