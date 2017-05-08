@@ -33,7 +33,7 @@ class Gdb:
             >>> gdb = Gdb()
             >>> value = gdb.GetValue("$var")
             >>> print("value:",value)
-            stdout: value: "value string"
+            >>>   value: "value string"
         """
         import gdb
         import re
@@ -63,7 +63,7 @@ class Gdb:
         gdb.execute("set {0} = \"{1}\"".format(variable,value))
 
     def GetLocation(self,location=None):
-        """Get location of current line of execution, of location of privided ."""
+        """Get location of current line of execution, or location of privided location name."""
         import gdb
         try:
             is_function = False
@@ -80,6 +80,8 @@ class Gdb:
             fullsource = symbol_table.fullname()
             source = symbol_table.filename
             line = symbol_table_and_line.line
+
+            # gdb adds breakpoints to functions on the next line
             if is_function:
                 line += 1
 

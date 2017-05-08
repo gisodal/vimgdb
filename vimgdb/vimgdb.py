@@ -47,7 +47,7 @@ class Vimgdb:
             remove_breakpoints = stored_breakpoints - breakpoints
             self.vim.UpdateBreakpoints(add_breakpoints,remove_breakpoints)
 
-        # update current location in source
+        # goto and highlight current line of execution
         self.vim.UpdateLine(line)
         self.vim.GotoLine(line)
 
