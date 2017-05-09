@@ -1,8 +1,9 @@
 from setuptools import setup
+from vimgdb import Version
 
 setup(
     name='vimgdb',
-    version='1.1.0',
+    version=Version(),
     zip_safe=False,
     description='Use Vim to visually step through source code with GNU Gdb.',
     keywords='Vim Gdb Tmux debugger',
