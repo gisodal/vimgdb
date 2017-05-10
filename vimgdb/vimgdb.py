@@ -1,5 +1,6 @@
 from .viminterface import Vim
 from .gdbinterface import Gdb
+from .version import Version
 
 class Vimgdb:
 
