@@ -62,28 +62,41 @@ class Gdb:
             raise RuntimeError("Cannot store '{0}' in {1}: value longer than {2} characters".format(value,variable,MAX))
         gdb.execute("set {0} = \"{1}\"".format(variable,value))
 
-    def GetLocation(self,location=None):
-        """Get location of current line of execution, or location of privided location name."""
+
+    def IsRunning(self):
+        """Return true if currently executing source."""
         import gdb
         try:
-            is_function = False
+            gdb.selected_frame()
+            return True
+        except:
+            return False
+
+    def IsFunction(self,location):
+        """Check if provided location is a function.
+
+        >>> IsFunction("main") -> True
+        """
+        symbol = gdb.lookup_global_symbol(location)
+        if symbol != None:
+            return symbol.is_function
+        else:
+            return False;
+
+    def GetLocation(self,location=None):
+        """Get location of current line of execution, or location of provided location name."""
+        import gdb
+        try:
             if location == None:
                 current_line = gdb.decode_line()
             else:
                 current_line = gdb.decode_line(location)
-                symbol = gdb.lookup_global_symbol(location)
-                if symbol != None:
-                    is_function = symbol.is_function
 
             symbol_table_and_line = current_line[1][0]
             symbol_table = symbol_table_and_line.symtab
             fullsource = symbol_table.fullname()
             source = symbol_table.filename
             line = symbol_table_and_line.line
-
-            # gdb adds breakpoints to functions on the next line
-            if is_function:
-                line += 1
 
             return fullsource,source,line
         except:
@@ -94,6 +107,34 @@ class Gdb:
 
     def GetBreakpoints(self,source):
         """Return all lines that have breakpoints in provided source file."""
+        import re
+        import gdb
+        raw_break_info = gdb.execute('info break',to_string=True).split('\n')
+        match = '([0-9]+)[ ]*([^ ]+)[ ]*([^ ]+)[ ]*([^ ]+).*{0}:([0-9]+)'.format(source)
+        breakpoints = [ re.findall(match,line) for line in raw_break_info ]
+        breakpoints = [ breakpoint[0] for breakpoint in breakpoints if breakpoint ]
+
+        breaklines = set()
+        enabled = dict()
+        for breakpoint in breakpoints:
+            num =  breakpoint[0]
+            type = breakpoint[1]
+            disp = breakpoint[2]
+            enab = bool(breakpoint[3] == "y")
+            breakline = int(breakpoint[4])
+            if type == "breakpoint":
+                breaklines.add(breakline)
+                if breakline in enabled:
+                    enabled[breakline] = enabled[breakline] or enab
+                else:
+                    enabled[breakline] = enab
+
+        return breaklines,enabled
+
+    def GetBreakpointsInternal(self,source):
+        """Return all lines that have breakpoints in provided source file.
+        This function is equal to GetBreakpoints, but does not require 'info break'.
+        NOTE: Occasionally provides function breakpoints with an offset of 1."""
         import gdb
         breaklines = set()
         enabled = dict()

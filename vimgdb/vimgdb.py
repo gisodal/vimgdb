@@ -23,6 +23,10 @@ class Vimgdb:
 
     def Update(self,force=False):
         """Update breakpoints and highlighting in vim. (Call from GNU Gdb)."""
+        # onlu update during execution
+        if not (self.gdb.IsRunning() or force):
+            return 0
+
         # get current location in gdb
         fullsource,source,line = self.gdb.GetLocation()
 
@@ -31,7 +35,7 @@ class Vimgdb:
 
         # get last known open file in vim
         vim_source = self.gdb.GetStoredFile()
-        update_file = force or vim_source != fullsource
+        update_file = vim_source != fullsource
 
         # update file open in vim
         if update_file:
@@ -49,8 +53,9 @@ class Vimgdb:
             self.vim.UpdateBreakpoints(add_breakpoints,remove_breakpoints)
 
         # goto and highlight current line of execution
-        self.vim.UpdateLine(line)
-        self.vim.GotoLine(line)
+        if self.gdb.IsRunning():
+            self.vim.UpdateLine(line)
+            self.vim.GotoLine(line)
 
         # execute commands in vim
         ret = self.vim.RunCommand()
