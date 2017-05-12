@@ -1,6 +1,5 @@
 from .viminterface import Vim
 from .gdbinterface import Gdb
-from .version import Version
 
 class Vimgdb:
 
@@ -45,12 +44,11 @@ class Vimgdb:
         breakpoints,enabled = self.gdb.GetBreakpoints(source)
         if update_file:
             self.vim.InitSignColumn()
-            self.vim.UpdateBreakpoints(breakpoints)
+            self.vim.UpdateBreakpoints(breakpoints,enabled)
         else:
             stored_breakpoints = self.gdb.GetStoredBreakpoints()
-            add_breakpoints = breakpoints - stored_breakpoints
             remove_breakpoints = stored_breakpoints - breakpoints
-            self.vim.UpdateBreakpoints(add_breakpoints,remove_breakpoints)
+            self.vim.UpdateBreakpoints(breakpoints,enabled,remove_breakpoints)
 
         # goto and highlight current line of execution
         if self.gdb.IsRunning():
@@ -63,7 +61,7 @@ class Vimgdb:
         # store state in gdb
         if ret != 0:
             self.gdb.StoreFile("")
-            self.gdb.StoreBreakpoints([])
+            self.gdb.StoreBreakpoints(set())
         elif update_file:
             self.gdb.StoreFile(fullsource)
             self.gdb.StoreBreakpoints(breakpoints)

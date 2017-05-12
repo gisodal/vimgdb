@@ -133,14 +133,17 @@ class Vim:
         for breakline in breakpoints:
             self.RemoveSign(breakline)
 
-    def AddBreakpoints(self,breakpoints):
+    def AddBreakpoints(self,breakpoints,enabled):
         """Add breakpoints."""
         for breakline in breakpoints:
-            self.AddSign(breakline,"VimgdbBreakpointSign")
+            if enabled[breakline]:
+                self.AddSign(breakline,"VimgdbBreakpointSign")
+            else:
+                self.AddSign(breakline,"VimgdbDisabledBreakpointSign")
 
-    def UpdateBreakpoints(self,add_breakpoints=set(),remove_breakpoints=set()):
+    def UpdateBreakpoints(self,breakpoints,enabled,remove_breakpoints=set()):
         """Add and remove breakpoints."""
-        self.AddBreakpoints(add_breakpoints)
+        self.AddBreakpoints(breakpoints,enabled)
         self.RemoveBreakpoints(remove_breakpoints)
 
     def Redraw(self):
