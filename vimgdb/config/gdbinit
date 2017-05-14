@@ -16,10 +16,10 @@ else
 end
 
 python
-
 try:
     import sys
     import os
+
 
     sys.path.append(os.getcwd())
     from vimgdb import Vimgdb
@@ -27,14 +27,17 @@ try:
     vimgdb = Vimgdb()
     option = vimgdb.gdb.GetValue(vimgdb.gdb.option)
     if option == "disable":
-        vimgdb.Disable()
+        ret = vimgdb.Disable()
+    elif option == "main":
+        if 'c++' in gdb.execute('show language', to_string=True):
+            ret = vimgdb.Goto("main")
     else:
         force_update = bool(option == "force");
         cle_update = bool(option != "breakpoints")
-
         ret = vimgdb.Update(cle=cle_update,force=force_update)
-        #if ret != 0:
-        #    print("Vimgdb update failed")
+
+    #if ret != 0:
+    #    print("Vimgdb update failed")
 
 except ImportError:
     print("** vimgdb not found **")
@@ -54,6 +57,10 @@ except Exception as error:
     print(traceback.format_exc())
 
 end
+end
+
+define hookpost-file
+    _vimgdb main
 end
 
 define sync

@@ -18,7 +18,29 @@ class Vimgdb:
         """Remove vimgdb interface layer from vim session. (Call from GNU Gdb)."""
         self.vim.NewCommand()
         self.vim.DisableSignColumns()
-        self.vim.RunCommand()
+        ret = self.vim.RunCommand()
+        return ret
+
+    def Goto(self,location):
+        """Goto provided location in vim. (Call from GNU Gdb)."""
+        # get current location in gdb
+        fullsource,source,line = self.gdb.GetLocation(location)
+
+        # create new series of vim commands
+        self.vim.NewCommand()
+        self.vim.GotoFile(fullsource)
+        self.vim.GotoLine(line)
+        ret = self.vim.RunCommand()
+
+        # store state in gdb
+        if ret != 0:
+            self.gdb.StoreFile("")
+            self.gdb.StoreBreakpoints(set())
+        else:
+            self.gdb.StoreFile(fullsource)
+
+        return ret
+
 
     def Update(self,cle=True,force=False):
         """Update breakpoints and highlighting in vim. (Call from GNU Gdb)."""
