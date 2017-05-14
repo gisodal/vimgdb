@@ -20,7 +20,7 @@ class Vimgdb:
         self.vim.DisableSignColumns()
         self.vim.RunCommand()
 
-    def Update(self,force=False):
+    def Update(self,cle=True,force=False):
         """Update breakpoints and highlighting in vim. (Call from GNU Gdb)."""
         # onlu update during execution
         if not (self.gdb.IsRunning() or force):
@@ -51,7 +51,7 @@ class Vimgdb:
             self.vim.UpdateBreakpoints(breakpoints,enabled,remove_breakpoints)
 
         # goto and highlight current line of execution
-        if self.gdb.IsRunning():
+        if cle and self.gdb.IsRunning():
             self.vim.UpdateLine(line)
             self.vim.GotoLine(line)
 

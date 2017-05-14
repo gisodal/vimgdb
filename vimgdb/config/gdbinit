@@ -29,10 +29,10 @@ try:
     if option == "disable":
         vimgdb.Disable()
     else:
-        force_update = False;
-        if option == "force":
-            force_update = True
-        ret = vimgdb.Update(force=force_update)
+        force_update = bool(option == "force");
+        cle_update = bool(option != "breakpoints")
+
+        ret = vimgdb.Update(cle=cle_update,force=force_update)
         #if ret != 0:
         #    print("Vimgdb update failed")
 
@@ -46,6 +46,8 @@ except ImportError:
         print("    {0}".format(directory))
 
     sys.exit(1)
+except KeyboardInterrupt:
+    pass
 except Exception as error:
     import traceback
     print("Vimgdb Exception: {0}".format(str(error)))
@@ -64,23 +66,23 @@ define hook-quit
 end
 
 define hookpost-break
-    _vimgdb
+    _vimgdb breakpoints
 end
 
 define hookpost-tbreak
-    _vimgdb
+    _vimgdb breakpoints
 end
 
 define hookpost-disable
-    _vimgdb
+    _vimgdb breakpoints
 end
 
 define hookpost-enable
-    _vimgdb
+    _vimgdb breakpoints
 end
 
 define hookpost-clear
-    _vimgdb
+    _vimgdb breakpoints
 end
 
 define hook-stop
