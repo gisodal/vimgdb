@@ -29,6 +29,7 @@ class Vimgdb:
         # create new series of vim commands
         self.vim.NewCommand()
         self.vim.GotoFile(fullsource)
+        self.vim.InitSignColumn()
         self.vim.GotoLine(line)
         ret = self.vim.RunCommand()
 
@@ -73,8 +74,8 @@ class Vimgdb:
             self.vim.UpdateBreakpoints(breakpoints,enabled,remove_breakpoints)
 
         # goto and highlight current line of execution
+        self.vim.UpdateLine(line)
         if cle and self.gdb.IsRunning():
-            self.vim.UpdateLine(line)
             self.vim.GotoLine(line)
 
         # execute commands in vim
@@ -91,6 +92,37 @@ class Vimgdb:
             self.gdb.StoreBreakpoints(breakpoints)
 
         return ret
+
+    def Register(self):
+        """Register all events required by Vimgdb. (Call from GNU Gdb)."""
+        import gdb
+        import traceback
+
+        def StopEvent(stop_event):
+            try:
+                self.Update(cle=True,force=False)
+            except Exception as error:
+                print("Vimgdb Exception: {0}".format(str(error)))
+                print(traceback.format_exc())
+
+        def BreakEvent(breakpoint):
+            try:
+                self.Update(cle=False,force=True)
+            except Exception as error:
+                print("Vimgdb Exception: {0}".format(str(error)))
+                print(traceback.format_exc())
+
+        def ObjEvent(obj):
+            try:
+                self.Goto("main")
+            except: pass
+
+        gdb.events.stop.connect(StopEvent)
+        gdb.events.breakpoint_created.connect(BreakEvent)
+        gdb.events.breakpoint_modified.connect(BreakEvent)
+        gdb.events.breakpoint_deleted.connect(BreakEvent)
+        gdb.events.new_objfile.connect(ObjEvent)
+
 
 def main(args):
     vimgdb = Vimgdb()

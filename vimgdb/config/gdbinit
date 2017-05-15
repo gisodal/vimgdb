@@ -2,7 +2,17 @@
 
 # create gdb option variable
 python
-param = gdb.Parameter("_vimgdb_argv", gdb.COMMAND_NONE,gdb.PARAM_OPTIONAL_FILENAME)
+#param = gdb.Parameter("_vimgdb_argv", gdb.COMMAND_NONE,gdb.PARAM_OPTIONAL_FILENAME)
+class ArgvParameter(gdb.Parameter):
+    def __init__(self):
+        super(ArgvParameter, self).__init__("_vimgdb_argv",
+            gdb.COMMAND_NONE, gdb.PARAM_STRING)
+    def get_set_string(self):
+        return "" #argv: "+self.value
+    def get_show_string(self, _):
+        return "" #argv: "+self.value
+
+ArgvParameter()
 end
 
 # vimgdb interface
@@ -14,39 +24,41 @@ else
 end
 
 python
+def GetVimgdb():
+    try:
+        import sys
+        import os
+
+        sys.path.append(os.getcwd())
+        from vimgdb import Vimgdb
+
+        return Vimgdb()
+
+    except ImportError:
+        print("** vimgdb not found **")
+        print("Python {0}.{1}.{2} could not find vimgdb in:".format(
+                sys.version_info.major,
+                sys.version_info.minor,
+                sys.version_info.micro))
+
+        for directory in sys.path:
+            print("    {0}".format(directory))
+
+        sys.exit(1)
+
 try:
-    import sys
-    import os
-
-    sys.path.append(os.getcwd())
-    from vimgdb import Vimgdb
-
-    vimgdb = Vimgdb()
+    vimgdb = GetVimgdb()
     argv = vimgdb.gdb.GetValue(vimgdb.gdb.argv)
 
-    if argv == "disable":
-        ret = vimgdb.Disable()
-    elif argv == "main":
-        if 'c++' in gdb.execute('show language', to_string=True):
-            ret = vimgdb.Goto("main")
+    if argv == "register":
+        vimgdb.Register()
+    elif argv == "disable":
+        vimgdb.Disable()
     else:
         force_update = bool(argv == "force");
         cle_update = bool(argv != "breakpoints")
-        ret = vimgdb.Update(cle=cle_update,force=force_update)
+        vimgdb.Update(cle=cle_update,force=force_update)
 
-    #if ret != 0:
-    #    print("Vimgdb update failed")
-
-except ImportError:
-    print("** vimgdb not found **")
-    print("Python {0}.{1}.{2} could not find vimgdb in:".format(
-            sys.version_info.major,
-            sys.version_info.minor,
-            sys.version_info.micro))
-    for directory in sys.path:
-        print("    {0}".format(directory))
-
-    sys.exit(1)
 except KeyboardInterrupt:
     pass
 except Exception as error:
@@ -57,9 +69,7 @@ except Exception as error:
 end
 end
 
-define hookpost-file
-    _vimgdb main
-end
+_vimgdb register
 
 define sync
     _vimgdb force
@@ -68,30 +78,6 @@ end
 # gdb hooks
 define hook-quit
     _vimgdb disable
-end
-
-define hookpost-break
-    _vimgdb breakpoints
-end
-
-define hookpost-tbreak
-    _vimgdb breakpoints
-end
-
-define hookpost-disable
-    _vimgdb breakpoints
-end
-
-define hookpost-enable
-    _vimgdb breakpoints
-end
-
-define hookpost-clear
-    _vimgdb breakpoints
-end
-
-define hook-stop
-    _vimgdb
 end
 
 define hookpost-up

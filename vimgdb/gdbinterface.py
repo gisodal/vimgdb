@@ -36,7 +36,7 @@ class Gdb:
         try:
             return gdb.parameter(variable)
         except:
-            return None
+            return ""
 
     def SetValue(self,variable,value):
         """Set string value of GNU Gdb parameter '<variable name>'.
@@ -46,7 +46,7 @@ class Gdb:
             >>> gdb.SetValue("variable name","value string")
         """
         import gdb
-        param = gdb.Parameter(variable, gdb.COMMAND_NONE,gdb.PARAM_OPTIONAL_FILENAME)
+        param = gdb.Parameter(variable, gdb.COMMAND_NONE,gdb.PARAM_STRING)
         param.value = str(value)
 
     def IsRunning(self):
