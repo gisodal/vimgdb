@@ -8,9 +8,9 @@ class Gdb:
 
     def __init__(self):
         self.executable = "gdb"
-        self.src = "$_vimgdb_src"
-        self.breakpoints = "$_vimgdb_breakpoints"
-        self.option = "$_vimgdb_option"
+        self.src = "_vimgdb_src"
+        self.breakpoints = "_vimgdb_breakpoints"
+        self.option = "_vimgdb_option"
 
     def Start(self,args=[],check=True):
         """Start GNU Gdb."""
@@ -24,44 +24,30 @@ class Gdb:
         subprocess.call(cmd)
 
     def GetValue(self,variable):
-        """Return value of GNU Gdb convenience variable "$<variable name>".
-
-            In GNU Gdb:
-            >>> gdb) set $var = "value string"
+        """Return value of GNU Gdb parameter "<variable name>".
 
             Using GNU Gdb python API:
             >>> gdb = Gdb()
-            >>> value = gdb.GetValue("$var")
+            >>> value = gdb.GetValue("variable name")
             >>> print("value:",value)
             >>>   value: "value string"
         """
         import gdb
-        import re
-        value = str(gdb.parse_and_eval("{0}".format(variable)))
-        value = re.findall('"(.*)"', value)
-        if len(value) > 0:
-            return value[0]
-        else:
-            return ""
+        try:
+            return gdb.parameter(variable)
+        except:
+            return None
 
     def SetValue(self,variable,value):
-        """Set string value of GNU Gdb convenience variable '$<variable name>'.
-
-            PRECONDITION: "$var" must be set (allocated) in GNU Gdb.
-
-            The following are equivalent. In GNU Gdb:
-            >>> set $var = "value string"
+        """Set string value of GNU Gdb parameter '<variable name>'.
 
             Using GNU Gdb python API:
             >>> gdb = Gdb()
-            >>> gdb.SetValue("$var","value string")
+            >>> gdb.SetValue("variable name","value string")
         """
         import gdb
-        MAX = 250
-        if len(value) > MAX:
-            raise RuntimeError("Cannot store '{0}' in {1}: value longer than {2} characters".format(value,variable,MAX))
-        gdb.execute("set {0} = \"{1}\"".format(variable,value))
-
+        param = gdb.Parameter(variable, gdb.COMMAND_NONE,gdb.PARAM_OPTIONAL_FILENAME)
+        param.value = str(value)
 
     def IsRunning(self):
         """Return true if currently executing source."""
