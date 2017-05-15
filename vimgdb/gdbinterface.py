@@ -10,7 +10,7 @@ class Gdb:
         self.executable = "gdb"
         self.src = "_vimgdb_src"
         self.breakpoints = "_vimgdb_breakpoints"
-        self.option = "_vimgdb_option"
+        self.argv = "_vimgdb_argv"
 
     def Start(self,args=[],check=True):
         """Start GNU Gdb."""

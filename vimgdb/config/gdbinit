@@ -1,18 +1,16 @@
 # vim: set filetype=python
 
-# allocate gdb convenience variables
+# create gdb option variable
 python
-variables = [ "$_vimgdb_option", "$_vimgdb_src", "$_vimgdb_breakpoints" ]
-for variable in variables:
-    gdb.execute("set {0} = \"{1}\"".format(variable,"\\0"*256))
+param = gdb.Parameter("_vimgdb_argv", gdb.COMMAND_NONE,gdb.PARAM_OPTIONAL_FILENAME)
 end
 
 # vimgdb interface
 define _vimgdb
 if $argc >= 1
-    set $_vimgdb_option = "$arg0"
+    set _vimgdb_argv $arg0
 else
-    set $_vimgdb_option = ""
+    set _vimgdb_argv
 end
 
 python
@@ -20,20 +18,20 @@ try:
     import sys
     import os
 
-
     sys.path.append(os.getcwd())
     from vimgdb import Vimgdb
 
     vimgdb = Vimgdb()
-    option = vimgdb.gdb.GetValue(vimgdb.gdb.option)
-    if option == "disable":
+    argv = vimgdb.gdb.GetValue(vimgdb.gdb.argv)
+
+    if argv == "disable":
         ret = vimgdb.Disable()
-    elif option == "main":
+    elif argv == "main":
         if 'c++' in gdb.execute('show language', to_string=True):
             ret = vimgdb.Goto("main")
     else:
-        force_update = bool(option == "force");
-        cle_update = bool(option != "breakpoints")
+        force_update = bool(argv == "force");
+        cle_update = bool(argv != "breakpoints")
         ret = vimgdb.Update(cle=cle_update,force=force_update)
 
     #if ret != 0:
