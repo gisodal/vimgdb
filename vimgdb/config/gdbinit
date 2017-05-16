@@ -1,6 +1,6 @@
 # vim: set filetype=python
 
-# create gdb option variable
+# create vimgdb argv variable
 python
 #param = gdb.Parameter("_vimgdb_argv", gdb.COMMAND_NONE,gdb.PARAM_OPTIONAL_FILENAME)
 class ArgvParameter(gdb.Parameter):
