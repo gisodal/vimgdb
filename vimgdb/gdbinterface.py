@@ -91,7 +91,7 @@ class Gdb:
             else:
                 raise RuntimeError("Location '{0}' not found".format(location))
 
-    def GetBreakpoints(self,source):
+    def GetBreakpoints(self,source,delete_breakpoint=None):
         """Return all lines that have breakpoints in provided source file."""
         import re
         import gdb
@@ -103,12 +103,12 @@ class Gdb:
         breaklines = set()
         enabled = dict()
         for breakpoint in breakpoints:
-            num =  breakpoint[0]
+            num =  int(breakpoint[0])
             type = breakpoint[1]
             disp = breakpoint[2]
             enab = bool(breakpoint[3] == "y")
             breakline = int(breakpoint[4])
-            if type == "breakpoint":
+            if type == "breakpoint" and num != delete_breakpoint:
                 breaklines.add(breakline)
                 if breakline in enabled:
                     enabled[breakline] = enabled[breakline] or enab

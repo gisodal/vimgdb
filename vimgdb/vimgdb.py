@@ -42,8 +42,7 @@ class Vimgdb:
 
         return ret
 
-
-    def Update(self,cle=True,force=False):
+    def Update(self,cle=True,force=False,delete_breakpoint=None):
         """Update breakpoints and highlighting in vim. (Call from GNU Gdb)."""
         # onlu update during execution
         if not (self.gdb.IsRunning() or force):
@@ -64,7 +63,7 @@ class Vimgdb:
             self.vim.GotoFile(fullsource)
 
         # update breakpoints
-        breakpoints,enabled = self.gdb.GetBreakpoints(source)
+        breakpoints,enabled = self.gdb.GetBreakpoints(source,delete_breakpoint)
         if update_file:
             self.vim.InitSignColumn()
             self.vim.UpdateBreakpoints(breakpoints,enabled)
@@ -98,19 +97,21 @@ class Vimgdb:
         import gdb
         import traceback
 
-        def StopEvent(stop_event):
+        def HandleException(function, *args, **kwargs):
             try:
-                self.Update(cle=True,force=False)
+                return function(*args, **kwargs)
             except Exception as error:
                 print("Vimgdb Exception: {0}".format(str(error)))
                 print(traceback.format_exc())
 
+        def StopEvent(stop_event):
+            HandleException(self.Update,cle=True,force=False)
+
         def BreakEvent(breakpoint):
-            try:
-                self.Update(cle=False,force=True)
-            except Exception as error:
-                print("Vimgdb Exception: {0}".format(str(error)))
-                print(traceback.format_exc())
+            HandleException(self.Update,cle=False,force=True)
+
+        def BreakDelEvent(breakpoint):
+            HandleException(self.Update,cle=False,force=True,delete_breakpoint=int(breakpoint.number))
 
         def ObjEvent(obj):
             try:
@@ -120,7 +121,7 @@ class Vimgdb:
         gdb.events.stop.connect(StopEvent)
         gdb.events.breakpoint_created.connect(BreakEvent)
         gdb.events.breakpoint_modified.connect(BreakEvent)
-        gdb.events.breakpoint_deleted.connect(BreakEvent)
+        gdb.events.breakpoint_deleted.connect(BreakDelEvent)
         gdb.events.new_objfile.connect(ObjEvent)
 
 
