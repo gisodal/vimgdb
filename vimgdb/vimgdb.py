@@ -21,35 +21,14 @@ class Vimgdb:
         ret = self.vim.RunCommand()
         return ret
 
-    def Goto(self,location):
-        """Goto provided location in vim. (Call from GNU Gdb)."""
-        # get current location in gdb
-        fullsource,source,line = self.gdb.GetLocation(location)
-
-        # create new series of vim commands
-        self.vim.NewCommand()
-        self.vim.GotoFile(fullsource)
-        self.vim.InitSignColumn()
-        self.vim.GotoLine(line)
-        ret = self.vim.RunCommand()
-
-        # store state in gdb
-        if ret != 0:
-            self.gdb.StoreFile("")
-            self.gdb.StoreBreakpoints(set())
-        else:
-            self.gdb.StoreFile(fullsource)
-
-        return ret
-
-    def Update(self,cle=True,force=False,delete_breakpoint=None):
+    def Update(self,cle=True,force=False,delete_breakpoint=None,location=None):
         """Update breakpoints and highlighting in vim. (Call from GNU Gdb)."""
-        # onlu update during execution
+        # only update during execution
         if not (self.gdb.IsRunning() or force):
             return 0
 
         # get current location in gdb
-        fullsource,source,line = self.gdb.GetLocation()
+        fullsource,source,line = self.gdb.GetLocation(location)
 
         # create new series of vim commands
         self.vim.NewCommand()
@@ -73,7 +52,9 @@ class Vimgdb:
             self.vim.UpdateBreakpoints(breakpoints,enabled,remove_breakpoints)
 
         # goto and highlight current line of execution
-        self.vim.UpdateLine(line)
+        if location == None:
+            self.vim.UpdateLine(line)
+
         if cle and self.gdb.IsRunning():
             self.vim.GotoLine(line)
 
@@ -115,7 +96,7 @@ class Vimgdb:
 
         def ObjEvent(obj):
             try:
-                self.Goto("main")
+                self.Update(cle=False,force=True,location="main")
             except: pass
 
         gdb.events.stop.connect(StopEvent)
