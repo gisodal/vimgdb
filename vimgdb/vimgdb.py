@@ -21,10 +21,18 @@ class Vimgdb:
         ret = self.vim.RunCommand()
         return ret
 
-    def Update(self,cle=True,force=False,delete_breakpoint=None,location=None):
+    def Kill(self):
+        """Remove current line of execution highlighting. (Call from GNU Gdb)."""
+        self.vim.NewCommand()
+        self.vim.RemoveCle()
+        ret = self.vim.RunCommand()
+        return ret
+
+    def Update(self,goto_cle=True,force=False,delete_breakpoint=None,location=None):
         """Update breakpoints and highlighting in vim. (Call from GNU Gdb)."""
         # only update during execution
-        if not (self.gdb.IsRunning() or force):
+        is_running = self.gdb.IsRunning()
+        if not (is_running or force):
             return 0
 
         # get current location in gdb
@@ -52,11 +60,12 @@ class Vimgdb:
             self.vim.UpdateBreakpoints(breakpoints,enabled,remove_breakpoints)
 
         # goto and highlight current line of execution
-        if location == None:
-            self.vim.UpdateLine(line)
-
-        if cle and self.gdb.IsRunning():
-            self.vim.GotoLine(line)
+        if is_running:
+            self.vim.Cle(line)
+            if goto_cle:
+                self.vim.GotoLine(line)
+        else:
+            self.vim.RemoveCle()
 
         # execute commands in vim
         ret = self.vim.RunCommand()
@@ -86,17 +95,17 @@ class Vimgdb:
                 print(traceback.format_exc())
 
         def StopEvent(stop_event):
-            HandleException(self.Update,cle=True,force=False)
+            HandleException(self.Update,goto_cle=True,force=False)
 
         def BreakEvent(breakpoint):
-            HandleException(self.Update,cle=False,force=True)
+            HandleException(self.Update,goto_cle=False,force=True)
 
         def BreakDelEvent(breakpoint):
-            HandleException(self.Update,cle=False,force=True,delete_breakpoint=int(breakpoint.number))
+            HandleException(self.Update,goto_cle=False,force=True,delete_breakpoint=int(breakpoint.number))
 
         def ObjEvent(obj):
             try:
-                self.Update(cle=False,force=True,location="main")
+                self.Update(goto_cle=False,force=True,location="main")
             except: pass
 
         gdb.events.stop.connect(StopEvent)

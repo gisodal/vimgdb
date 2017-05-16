@@ -20,6 +20,7 @@ class Vim:
     def __init__(self):
         self.servername = u"VIMGDB"
         self.executable = "vim"
+        self.cle_id = 999998
         self.debug = False
 
     def Start(self,args=[],check=True):
@@ -152,15 +153,16 @@ class Vim:
 
     def GotoLine(self,line):
         """Move cursor to particular line."""
-        if line > 1:
-            self.AddCommand("call cursor({0},1)".format(line))
+        self.AddCommand("call cursor({0},1)".format(line))
 
-    def UpdateLine(self,line):
+    def RemoveCle(self):
+        """Remove current line of execution highlighting."""
+        self.RemoveSigns(self.cle_id)
+
+    def Cle(self,line):
         """Highlight current line of execution."""
-        if line > 1:
-            sign_id = 999998
-            self.RemoveSigns(sign_id)
-            self.AddSign(line,"VimgdbLocationSign",sign_id)
+        self.RemoveCle()
+        self.AddSign(line,"VimgdbLocationSign",self.cle_id)
 
     def GotoFile(self,filename,check=False):
         """Open file."""
