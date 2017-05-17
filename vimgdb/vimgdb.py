@@ -56,9 +56,8 @@ class Vimgdb:
             self.vim.UpdateBreakpoints(breakpoints,enabled)
         else:
             stored_breakpoints = self.gdb.GetStoredBreakpoints()
-            add_breakpoints = breakpoints - stored_breakpoints
             remove_breakpoints = stored_breakpoints - breakpoints
-            self.vim.UpdateBreakpoints(add_breakpoints,enabled,remove_breakpoints)
+            self.vim.UpdateBreakpoints(breakpoints,enabled,remove_breakpoints)
 
         # goto and highlight current line of execution
         if is_running :
