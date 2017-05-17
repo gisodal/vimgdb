@@ -20,7 +20,7 @@ class Vim:
     def __init__(self):
         self.servername = u"VIMGDB"
         self.executable = "vim"
-        self.cle_id = 999998
+        self.cle_id = 999999
         self.use_file = True
         self.debug = False
 
@@ -74,7 +74,7 @@ class Vim:
     def RunCommand(self):
         """Send all commands in the vimgdb batch."""
         if len(self.command) > 0:
-            self.Redraw()
+
             if self.debug:
                 print("*** Commands sent **************************************\n   ",
                     "\n    ".join(self.command),
@@ -83,11 +83,13 @@ class Vim:
             if self.use_file:
                 home = os.path.expanduser('~')
                 cmdfile = home+"/.vimgdb-command"
+
                 f = open(cmdfile, 'w')
                 f.write("\n".join(self.command))
                 f.close()
-                command = "<Esc>:source {0}<Enter>".format(cmdfile)
+                command = "<Esc>:source {0}<Enter>i<Esc>".format(cmdfile)
             else:
+                self.Redraw()
                 function = [ 'silent execute "function! Vimgdb()' ]
                 function.extend([ cmd.replace('"','\\"') for cmd in self.command] )
                 function.extend(['endfunction"'])
@@ -124,7 +126,7 @@ class Vim:
 
     def EnableSignColumn(self):
         """Add the sign column."""
-        self.AddSign(1,"VimgdbDummy",999999)
+        self.AddSign(1,"VimgdbDummy",999990)
 
     def DisableSignColumn(self):
         """Remove sign column in current file."""
@@ -163,7 +165,8 @@ class Vim:
 
     def GotoLine(self,line):
         """Move cursor to particular line."""
-        self.AddCommand("call cursor({0},1)".format(line))
+        #self.AddCommand("call cursor({0},1)".format(line))
+        self.AddCommand("{0}".format(line))
 
     def RemoveCle(self):
         """Remove current line of execution highlighting."""

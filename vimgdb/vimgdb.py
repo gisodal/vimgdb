@@ -56,16 +56,18 @@ class Vimgdb:
             self.vim.UpdateBreakpoints(breakpoints,enabled)
         else:
             stored_breakpoints = self.gdb.GetStoredBreakpoints()
+            add_breakpoints = breakpoints - stored_breakpoints
             remove_breakpoints = stored_breakpoints - breakpoints
-            self.vim.UpdateBreakpoints(breakpoints,enabled,remove_breakpoints)
+            self.vim.UpdateBreakpoints(add_breakpoints,enabled,remove_breakpoints)
 
         # goto and highlight current line of execution
-        if is_running:
+        if is_running :
             self.vim.Cle(line)
-            if goto_cle:
-                self.vim.GotoLine(line)
         else:
             self.vim.RemoveCle()
+
+        if goto_cle:
+            self.vim.GotoLine(line)
 
         # execute commands in vim
         ret = self.vim.RunCommand()
@@ -105,7 +107,7 @@ class Vimgdb:
 
         def ObjEvent(obj):
             try:
-                self.Update(goto_cle=False,force=True,location="main")
+                self.Update(goto_cle=True,force=True,location="main")
             except: pass
 
         gdb.events.stop.connect(StopEvent)
