@@ -91,50 +91,43 @@ class Gdb:
             else:
                 raise RuntimeError("Location '{0}' not found".format(location))
 
-    def GetBreakpoints(self,source,delete_breakpoint=None):
+    def GetBreakpointLines(self,source):
         """Return all lines that have breakpoints in provided source file."""
         import re
         import gdb
         raw_break_info = gdb.execute('info break',to_string=True).split('\n')
-        match = '([0-9]+)[ ]*([^ ]+)[ ]*([^ ]+)[ ]*([^ ]+).*{0}:([0-9]+)'.format(source)
+        match = '^([0-9]+).*{0}:([0-9]+)$'.format(source)
         breakpoints = [ re.findall(match,line) for line in raw_break_info ]
         breakpoints = [ breakpoint[0] for breakpoint in breakpoints if breakpoint ]
+        breakpoints = { int(x[0]): int(x[1]) for x in breakpoints }
+        return breakpoints
 
-        breaklines = set()
-        enabled = dict()
-        for breakpoint in breakpoints:
-            num =  int(breakpoint[0])
-            type = breakpoint[1]
-            disp = breakpoint[2]
-            enab = bool(breakpoint[3] == "y")
-            breakline = int(breakpoint[4])
-            if type == "breakpoint" and num != delete_breakpoint:
-                breaklines.add(breakline)
-                if breakline in enabled:
-                    enabled[breakline] = enabled[breakline] or enab
-                else:
-                    enabled[breakline] = enab
-
-        return breaklines,enabled
-
-    def GetBreakpointsInternal(self,source):
+    def GetBreakpoints(self,source,delete_breakpoint=None,update_breakpoint=None):
         """Return all lines that have breakpoints in provided source file.
+
         This function is equal to GetBreakpoints, but does not require 'info break'.
         NOTE: Occasionally provides function breakpoints with an offset of 1."""
         import gdb
         breaklines = set()
         enabled = dict()
-        for breakpoint in gdb.breakpoints():
-            if breakpoint.visible:
-                fullsource,breaksource,breakline = self.GetLocation(breakpoint.location)
-                if source == breaksource:
-                    breaklines.add(breakline)
-                    if breakline in enabled:
-                        enabled[breakline] = enabled[breakline] or breakpoint.enabled
-                    else:
-                        enabled[breakline] = breakpoint.enabled
 
-        return breaklines,enabled
+        breakpointlines = self.GetBreakpointLines(source)
+        if update_breakpoint != None and update_breakpoint in breakpointlines:
+            update_breakline = breakpointlines[update_breakpoint]
+        else:
+            update_breakline = None
+
+        for breakpoint in gdb.breakpoints():
+            key = breakpoint.number
+            if breakpoint.number is not delete_breakpoint and key in breakpointlines:
+                breakline = breakpointlines[key]
+                breaklines.add(breakline)
+                if breakline in enabled:
+                    enabled[breakline] = enabled[breakline] or breakpoint.enabled
+                else:
+                    enabled[breakline] = breakpoint.enabled
+
+        return breaklines,enabled,update_breakline
 
     def GetStoredBreakpoints(self):
         """Get previously stored breakpoint lines."""
