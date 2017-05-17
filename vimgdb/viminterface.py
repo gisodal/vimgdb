@@ -21,6 +21,7 @@ class Vim:
         self.servername = u"VIMGDB"
         self.executable = "vim"
         self.cle_id = 999998
+        self.use_file = True
         self.debug = False
 
     def Start(self,args=[],check=True):
@@ -74,23 +75,32 @@ class Vim:
         """Send all commands in the vimgdb batch."""
         if len(self.command) > 0:
             self.Redraw()
-            function = [ 'silent execute "function! Vimgdb()' ]
-            function.extend([ cmd.replace('"','\\"') for cmd in self.command] )
-            function.extend(['endfunction"'])
-            function = '\\n'.join(function)
-            function = [function, 'call Vimgdb()']
-            function = " | ".join(function)
-
-            command = '<Esc>:{0}<Enter>'.format(function)
-            cmd = [ self.executable,
-                "--servername",self.servername,
-                "--remote-send",command]
-
             if self.debug:
                 print("*** Commands sent **************************************\n   ",
                     "\n    ".join(self.command),
                     "\n********************************************************")
 
+            if self.use_file:
+                home = os.path.expanduser('~')
+                cmdfile = home+"/.vimgdb-command"
+                f = open(cmdfile, 'w')
+                f.write("\n".join(self.command))
+                f.close()
+                command = "<Esc>:source {0}<Enter>".format(cmdfile)
+            else:
+                function = [ 'silent execute "function! Vimgdb()' ]
+                function.extend([ cmd.replace('"','\\"') for cmd in self.command] )
+                function.extend(['endfunction"'])
+                function = '\\n'.join(function)
+                function = [function, 'call Vimgdb()']
+                function = " | ".join(function)
+                command = '<Esc>:{0}<Enter>'.format(function)
+
+            cmd = [ self.executable,
+                "--servername",self.servername,
+                "--remote-send",command]
+
+            if self.debug:
                 return subprocess.call(cmd)
             else:
                 DEVNULL = open(os.devnull, 'w')
