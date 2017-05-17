@@ -102,8 +102,9 @@ class Gdb:
         breakpoints = { int(x[0]): int(x[1]) for x in breakpoints }
         return breakpoints
 
-    def GetBreakpoints(self,source,delete_breakpoint=None):
+    def GetBreakpoints(self,source,delete_breakpoint=None,update_breakpoint=None):
         """Return all lines that have breakpoints in provided source file.
+
         This function is equal to GetBreakpoints, but does not require 'info break'.
         NOTE: Occasionally provides function breakpoints with an offset of 1."""
         import gdb
@@ -111,6 +112,11 @@ class Gdb:
         enabled = dict()
 
         breakpointlines = self.GetBreakpointLines(source)
+        if update_breakpoint != None and update_breakpoint in breakpointlines:
+            update_breakline = breakpointlines[update_breakpoint]
+        else:
+            update_breakline = None
+
         for breakpoint in gdb.breakpoints():
             key = breakpoint.number
             if breakpoint.number is not delete_breakpoint and key in breakpointlines:
@@ -121,7 +127,7 @@ class Gdb:
                 else:
                     enabled[breakline] = breakpoint.enabled
 
-        return breaklines,enabled
+        return breaklines,enabled,update_breakline
 
     def GetStoredBreakpoints(self):
         """Get previously stored breakpoint lines."""
