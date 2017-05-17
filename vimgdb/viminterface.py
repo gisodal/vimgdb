@@ -20,6 +20,8 @@ class Vim:
     def __init__(self):
         self.servername = u"VIMGDB"
         self.executable = "vim"
+        self.cle_id = 999999
+        self.use_file = True
         self.debug = False
 
     def Start(self,args=[],check=True):
@@ -72,24 +74,35 @@ class Vim:
     def RunCommand(self):
         """Send all commands in the vimgdb batch."""
         if len(self.command) > 0:
-            self.Redraw()
-            function = [ 'silent execute "function! Vimgdb()' ]
-            function.extend([ cmd.replace('"','\\"') for cmd in self.command] )
-            function.extend(['endfunction"'])
-            function = '\\n'.join(function)
-            function = [function, 'call Vimgdb()']
-            function = " | ".join(function)
-
-            command = '<Esc>:{0}<Enter>'.format(function)
-            cmd = [ self.executable,
-                "--servername",self.servername,
-                "--remote-send",command]
 
             if self.debug:
                 print("*** Commands sent **************************************\n   ",
                     "\n    ".join(self.command),
                     "\n********************************************************")
 
+            if self.use_file:
+                home = os.path.expanduser('~')
+                cmdfile = home+"/.vimgdb-command"
+
+                f = open(cmdfile, 'w')
+                f.write("\n".join(self.command))
+                f.close()
+                command = "<Esc>:source {0}<Enter>i<Esc>".format(cmdfile)
+            else:
+                self.Redraw()
+                function = [ 'silent execute "function! Vimgdb()' ]
+                function.extend([ cmd.replace('"','\\"') for cmd in self.command] )
+                function.extend(['endfunction"'])
+                function = '\\n'.join(function)
+                function = [function, 'call Vimgdb()']
+                function = " | ".join(function)
+                command = '<Esc>:{0}<Enter>'.format(function)
+
+            cmd = [ self.executable,
+                "--servername",self.servername,
+                "--remote-send",command]
+
+            if self.debug:
                 return subprocess.call(cmd)
             else:
                 DEVNULL = open(os.devnull, 'w')
@@ -113,7 +126,7 @@ class Vim:
 
     def EnableSignColumn(self):
         """Add the sign column."""
-        self.AddSign(1,"VimgdbDummy",999999)
+        self.AddSign(1,"VimgdbDummy",999990)
 
     def DisableSignColumn(self):
         """Remove sign column in current file."""
@@ -133,14 +146,17 @@ class Vim:
         for breakline in breakpoints:
             self.RemoveSign(breakline)
 
-    def AddBreakpoints(self,breakpoints):
+    def AddBreakpoints(self,breakpoints,enabled):
         """Add breakpoints."""
         for breakline in breakpoints:
-            self.AddSign(breakline,"VimgdbBreakpointSign")
+            if enabled[breakline]:
+                self.AddSign(breakline,"VimgdbBreakpointSign")
+            else:
+                self.AddSign(breakline,"VimgdbDisabledBreakpointSign")
 
-    def UpdateBreakpoints(self,add_breakpoints=set(),remove_breakpoints=set()):
+    def UpdateBreakpoints(self,breakpoints,enabled,remove_breakpoints=set()):
         """Add and remove breakpoints."""
-        self.AddBreakpoints(add_breakpoints)
+        self.AddBreakpoints(breakpoints,enabled)
         self.RemoveBreakpoints(remove_breakpoints)
 
     def Redraw(self):
@@ -149,15 +165,17 @@ class Vim:
 
     def GotoLine(self,line):
         """Move cursor to particular line."""
-        if line > 1:
-            self.AddCommand("call cursor({0},1)".format(line))
+        #self.AddCommand("call cursor({0},1)".format(line))
+        self.AddCommand("{0}".format(line))
 
-    def UpdateLine(self,line):
+    def RemoveCle(self):
+        """Remove current line of execution highlighting."""
+        self.RemoveSigns(self.cle_id)
+
+    def Cle(self,line):
         """Highlight current line of execution."""
-        if line > 1:
-            sign_id = 999998
-            self.RemoveSigns(sign_id)
-            self.AddSign(line,"VimgdbLocationSign",sign_id)
+        self.RemoveCle()
+        self.AddSign(line,"VimgdbLocationSign",self.cle_id)
 
     def GotoFile(self,filename,check=False):
         """Open file."""

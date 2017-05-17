@@ -8,9 +8,9 @@ class Gdb:
 
     def __init__(self):
         self.executable = "gdb"
-        self.src = "$_vimgdb_src"
-        self.breakpoints = "$_vimgdb_breakpoints"
-        self.option = "$_vimgdb_option"
+        self.src = "_vimgdb_src"
+        self.breakpoints = "_vimgdb_breakpoints"
+        self.argv = "_vimgdb_argv"
 
     def Start(self,args=[],check=True):
         """Start GNU Gdb."""
@@ -24,44 +24,30 @@ class Gdb:
         subprocess.call(cmd)
 
     def GetValue(self,variable):
-        """Return value of GNU Gdb convenience variable "$<variable name>".
-
-            In GNU Gdb:
-            >>> gdb) set $var = "value string"
+        """Return value of GNU Gdb parameter "<variable name>".
 
             Using GNU Gdb python API:
             >>> gdb = Gdb()
-            >>> value = gdb.GetValue("$var")
+            >>> value = gdb.GetValue("variable name")
             >>> print("value:",value)
             >>>   value: "value string"
         """
         import gdb
-        import re
-        value = str(gdb.parse_and_eval("{0}".format(variable)))
-        value = re.findall('"(.*)"', value)
-        if len(value) > 0:
-            return value[0]
-        else:
+        try:
+            return gdb.parameter(variable)
+        except:
             return ""
 
     def SetValue(self,variable,value):
-        """Set string value of GNU Gdb convenience variable '$<variable name>'.
-
-            PRECONDITION: "$var" must be set (allocated) in GNU Gdb.
-
-            The following are equivalent. In GNU Gdb:
-            >>> set $var = "value string"
+        """Set string value of GNU Gdb parameter '<variable name>'.
 
             Using GNU Gdb python API:
             >>> gdb = Gdb()
-            >>> gdb.SetValue("$var","value string")
+            >>> gdb.SetValue("variable name","value string")
         """
         import gdb
-        MAX = 250
-        if len(value) > MAX:
-            raise RuntimeError("Cannot store '{0}' in {1}: value longer than {2} characters".format(value,variable,MAX))
-        gdb.execute("set {0} = \"{1}\"".format(variable,value))
-
+        param = gdb.Parameter(variable, gdb.COMMAND_NONE,gdb.PARAM_STRING)
+        param.value = str(value)
 
     def IsRunning(self):
         """Return true if currently executing source."""
@@ -105,7 +91,7 @@ class Gdb:
             else:
                 raise RuntimeError("Location '{0}' not found".format(location))
 
-    def GetBreakpoints(self,source):
+    def GetBreakpoints(self,source,delete_breakpoint=None):
         """Return all lines that have breakpoints in provided source file."""
         import re
         import gdb
@@ -117,12 +103,12 @@ class Gdb:
         breaklines = set()
         enabled = dict()
         for breakpoint in breakpoints:
-            num =  breakpoint[0]
+            num =  int(breakpoint[0])
             type = breakpoint[1]
             disp = breakpoint[2]
             enab = bool(breakpoint[3] == "y")
             breakline = int(breakpoint[4])
-            if type == "breakpoint":
+            if type == "breakpoint" and num != delete_breakpoint:
                 breaklines.add(breakline)
                 if breakline in enabled:
                     enabled[breakline] = enabled[breakline] or enab
