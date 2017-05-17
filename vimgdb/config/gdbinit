@@ -56,10 +56,12 @@ try:
         vimgdb.Kill()
     elif argv == "disable":
         vimgdb.Disable()
+    elif argv == "reload":
+        vimgdb.Update(force=True,update_file=True,goto_cle=True)
+    elif argv == "update":
+        vimgdb.Update(force=False,update_file=False,goto_cle=True)
     else:
-        force_update = bool(argv == "force");
-        cle_update = bool(argv != "breakpoints")
-        vimgdb.Update(goto_cle=cle_update,force=force_update)
+        raise RuntimeError("Unknown vimgdb option '{0}'".format(argv))
 
 except KeyboardInterrupt:
     pass
@@ -74,7 +76,7 @@ end
 _vimgdb register
 
 define sync
-    _vimgdb force
+    _vimgdb reload
 end
 
 # gdb hooks
@@ -83,13 +85,14 @@ define hook-quit
 end
 
 define hookpost-up
-    _vimgdb
+    _vimgdb update
 end
 
 define hookpost-down
-    _vimgdb
+    _vimgdb update
 end
 
 define hookpost-kill
     _vimgdb kill
 end
+

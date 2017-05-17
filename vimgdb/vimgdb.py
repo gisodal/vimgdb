@@ -28,7 +28,12 @@ class Vimgdb:
         ret = self.vim.RunCommand()
         return ret
 
-    def Update(self,goto_cle=True,force=False,delete_breakpoint=None,location=None):
+    def Update(self,
+            force=False,
+            update_file=False,
+            goto_cle=True,
+            delete_breakpoint=None,
+            location=None):
         """Update breakpoints and highlighting in vim. (Call from GNU Gdb)."""
         # only update during execution
         is_running = self.gdb.IsRunning()
@@ -43,7 +48,7 @@ class Vimgdb:
 
         # get last known open file in vim
         vim_source = self.gdb.GetStoredFile()
-        update_file = vim_source != fullsource
+        update_file = vim_source != fullsource or update_file
 
         # update file open in vim
         if update_file:
