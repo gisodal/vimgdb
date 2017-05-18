@@ -15,6 +15,18 @@ Use Vim to visually step through source code with GNU Gdb.
 
 Note: The example demonstrates Vimgdb while using [Tmux](https://tmux.github.io/), which allows the fast creation and navigation of vertical and horizontal terminal splits. Using it allows Vim and Gdb to be opened side by side.
 
+
+## Requirements
+
+1. GNU Gdb with python support. Verify in Gdb with:
+
+       (gdb) python-interactive
+    
+2. Vim with clientserver capability. Verify by looking for +clientserver with:
+
+       vim --version
+ 
+ 
 ## Installation
 
 Vimgdb can be run from the root of its source directory by typing `bin/vimgdb`, but requires installation to be run from anywhere:
@@ -35,9 +47,4 @@ From a different terminal, start Gdb:
 
 ## How it works
 
-Vimgdb starts Vim as a server such that Gdb can connect to it. Gdb is started upon the next call to Vimgdb if it is confirmed that the Vim server is running. Information about the current line of execution is passed from Gdb to Vim upon triggering a hook, e.g., hitting a breakpoint, stepping though code, moving up and down the call stack, etc. The corresponding file will be opened in Vim, breakpoints highlighted and the current line of execution indicated.
-
-## What it does not do
-
-Be aware that Vim needs to be able to execute the commands it receives. For instance, if you edit a file without saving, Vim prohibits changing to a different file. This will obviously distrub stepping through code.
-
+Vimgdb starts Vim as a server such that Gdb can connect to it. Gdb is started upon the next call to Vimgdb if it is confirmed that the Vim server is running. Information about the current execution state is passed from Gdb to Vim upon triggering a hook or event, e.g., hitting a breakpoint, stepping though code, moving up and down the call stack, etc. The corresponding file will be opened in Vim, breakpoints highlighted and the current line of execution indicated.
