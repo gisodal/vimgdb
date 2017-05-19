@@ -1,7 +1,9 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import print_function
 import subprocess
 import os
 
+from .vimgdbexception import VimgdbError
+from .settings import settings
 
 def IsTextfile(filename):
     """Check if a file is a text file."""
@@ -22,20 +24,19 @@ class Vim:
         self.executable = "vim"
         self.cle_id = 999999
         self.use_file = True
-        self.debug = False
 
     def Start(self,args=[],check=True):
         """Start vim as a server."""
         from os import path
 
         if check and self.IsRunning():
-            raise RuntimeError("Vim server already running")
+            raise VimgdbError("Vim server already running")
 
         library_dir = path.abspath(path.dirname(__file__))
         vimrc = path.join(library_dir, 'config/vimrc')
 
         if not path.exists(vimrc):
-            raise RuntimeError("Config file '{0}' not found".format(vimrc))
+            raise VimgdbError("Config file '{0}' not found".format(vimrc))
 
         for arg in args:
             if not IsTextfile(arg):
@@ -75,7 +76,7 @@ class Vim:
         """Send all commands in the vimgdb batch."""
         if len(self.command) > 0:
 
-            if self.debug:
+            if settings.debug:
                 print("*** Commands sent **************************************\n   ",
                     "\n    ".join(self.command),
                     "\n********************************************************")
@@ -102,7 +103,7 @@ class Vim:
                 "--servername",self.servername,
                 "--remote-send",command]
 
-            if self.debug:
+            if settings.debug:
                 return subprocess.call(cmd)
             else:
                 DEVNULL = open(os.devnull, 'w')

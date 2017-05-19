@@ -2,7 +2,9 @@ from __future__ import print_function, unicode_literals
 import subprocess
 import os
 
+from .vimgdbexception import VimgdbError
 from .viminterface import Vim
+from .settings import settings
 
 class Gdb:
 
@@ -14,10 +16,8 @@ class Gdb:
 
     def Start(self,args=[],check=True):
         """Start GNU Gdb."""
-        from os import path
-
-        library_dir = path.abspath(path.dirname(__file__))
-        gdbinit = path.join(library_dir, 'config/gdbinit')
+        library_dir = os.path.abspath(os.path.dirname(__file__))
+        gdbinit = os.path.join(library_dir, 'config/gdbinit')
 
         cmd = [self.executable,
             "-q","-iex","source {0}".format(gdbinit)] + args
@@ -87,9 +87,9 @@ class Gdb:
             return fullsource,source,line
         except:
             if location == None:
-                raise RuntimeError("Current location not detected")
+                raise VimgdbError("Current location not detected")
             else:
-                raise RuntimeError("Location '{0}' not found".format(location))
+                raise VimgdbError("Location '{0}' not found".format(location))
 
     def GetBreakpointLines(self,source):
         """Return all lines that have breakpoints in provided source file."""

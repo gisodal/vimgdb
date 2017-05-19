@@ -24,23 +24,22 @@ else
 end
 
 python
+import sys
+import os
+
 def GetVimgdb():
     try:
-        import sys
-        import os
-
-        sys.path.append(os.getcwd())
+        sys.path.insert(0,os.getcwd())
         from vimgdb import Vimgdb
-
         return Vimgdb()
+    except ImportError as error:
+        print("Python {0}.{1}.{2} import error:".format(
+            sys.version_info.major,
+            sys.version_info.minor,
+            sys.version_info.micro,
+            str(error)))
 
-    except ImportError:
-        print("** vimgdb not found **")
-        print("Python {0}.{1}.{2} could not find vimgdb in:".format(
-                sys.version_info.major,
-                sys.version_info.minor,
-                sys.version_info.micro))
-
+        print("Vimgdb searched in:")
         for directory in sys.path:
             print("    {0}".format(directory))
 
@@ -67,8 +66,8 @@ except KeyboardInterrupt:
     pass
 except Exception as error:
     import traceback
-    print("Vimgdb Exception: {0}".format(str(error)))
     print(traceback.format_exc())
+    print("Vimgdb Exception: {0}".format(str(error)))
 
 end
 end

@@ -11,7 +11,7 @@ setup(
     url='https://github.com/gisodal/vimgdb',
     packages=['vimgdb'],
     package_data={'vimgdb': ['config/vimrc','config/gdbinit']},
-    scripts = ['bin/vimgdb'],
+    scripts = ['bin/vimgdb','bin/vimgdb-server'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Topic :: Software Development :: Debuggers',

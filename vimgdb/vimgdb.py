@@ -1,5 +1,8 @@
 from .viminterface import Vim
 from .gdbinterface import Gdb
+from .vimgdbexception import VimgdbError
+from .settings import settings
+from .version import Version
 
 class Vimgdb:
 
@@ -7,12 +10,24 @@ class Vimgdb:
         self.vim = Vim()
         self.gdb = Gdb()
 
-    def Start(self,args=[]):
-        """Start vim, or start GNU Gdb if vim is already started."""
+    def Version(self):
+        """Return current vimgdb version."""
+        return Version()
+
+    def StartVim(self,args=[]):
+        """Start vim as a server, if it is not already started."""
         if not self.vim.IsRunning():
             self.vim.Start(args)
         else:
-            self.gdb.Start(args)
+            raise VimgdbError("Vim server already started.")
+
+    def StartGdb(self,args=[]):
+        """Start gdb."""
+        self.gdb.Start(args)
+
+    def Running(self):
+        """Check if vim server is running."""
+        return self.vim.IsRunning()
 
     def Disable(self):
         """Remove vimgdb interface layer from vim session. (Call from GNU Gdb)."""
@@ -96,14 +111,18 @@ class Vimgdb:
     def Register(self):
         """Register all events required by Vimgdb. (Call from GNU Gdb)."""
         import gdb
-        import traceback
 
         def HandleException(function, *args, **kwargs):
             try:
-                return function(*args, **kwargs)
-            except Exception as error:
-                print("Vimgdb Exception: {0}".format(str(error)))
-                print(traceback.format_exc())
+                ret = function(*args, **kwargs)
+                if ret != 0  and settings.debug:
+                    print("Connection to Vim server failed")
+                return ret
+            except VimgdbError as error:
+                if settings.debug:
+                    import traceback
+                    print(traceback.format_exc())
+                print("{0}".format(str(error)))
 
         def StopEvent(stop_event):
             HandleException(self.Update,force=True,goto_cle=True)
