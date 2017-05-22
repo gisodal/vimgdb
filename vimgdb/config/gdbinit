@@ -29,7 +29,10 @@ import os
 
 def GetVimgdb():
     try:
-        sys.path.insert(0,os.getcwd())
+        cwd = os.getcwd()
+        if cwd not in sys.path:
+            sys.path.insert(0,os.getcwd())
+
         from vimgdb import Vimgdb
         return Vimgdb()
     except ImportError as error:
