@@ -1,29 +1,13 @@
 # vim: set filetype=python
 
-# create vimgdb argv variable
-python
-#param = gdb.Parameter("_vimgdb_argv", gdb.COMMAND_NONE,gdb.PARAM_OPTIONAL_FILENAME)
-class ArgvParameter(gdb.Parameter):
-    def __init__(self):
-        super(ArgvParameter, self).__init__("_vimgdb_argv",
-            gdb.COMMAND_NONE, gdb.PARAM_STRING)
-    def get_set_string(self):
-        return "" #argv: "+self.value
-    def get_show_string(self, _):
-        return "" #argv: "+self.value
-
-ArgvParameter()
-end
-
 # vimgdb interface
 define _vimgdb
-if $argc >= 1
-    set _vimgdb_argv $arg0
-else
-    set _vimgdb_argv
-end
+set $argv = 0
+set $argv = "$arg0"
 
 python
+argv = str(gdb.parse_and_eval("$argv")).replace('"','')
+
 import sys
 import os
 
@@ -50,7 +34,6 @@ def GetVimgdb():
 
 try:
     vimgdb = GetVimgdb()
-    argv = vimgdb.gdb.GetValue(vimgdb.gdb.argv)
 
     if argv == "register":
         vimgdb.Register()
