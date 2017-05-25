@@ -3,10 +3,19 @@
 # vimgdb interface
 define _vimgdb
 set $argv = 0
-set $argv = "$arg0"
+if $argc == 0
+    set $argv = ""
+end
+if $argc == 1
+    set $argv = "$arg0"
+end
+if $argc == 2
+    set $argv = "$arg0:$arg1"
+end
 
 python
-argv = str(gdb.parse_and_eval("$argv")).replace('"','')
+argv = str(gdb.parse_and_eval("$argv")).replace('"','').split(':')
+print "argv:",argv
 
 import sys
 import os
@@ -35,18 +44,18 @@ def GetVimgdb():
 try:
     vimgdb = GetVimgdb()
 
-    if argv == "register":
+    if argv[0] == "register":
         vimgdb.Register()
-    elif argv == "kill":
+    elif argv[0] == "kill":
         vimgdb.Kill()
-    elif argv == "disable":
+    elif argv[0] == "disable":
         vimgdb.Disable()
-    elif argv == "reload":
+    elif argv[0] == "reload":
         vimgdb.Update(force=True,update_file=True,goto_cle=True)
-    elif argv == "update":
+    elif argv[0] == "update":
         vimgdb.Update(force=False,update_file=False,goto_cle=True)
     else:
-        raise RuntimeError("Unknown vimgdb option '{0}'".format(argv))
+        raise RuntimeError("Unknown vimgdb option '{0}'".format(argv[0]))
 
 except KeyboardInterrupt:
     pass
