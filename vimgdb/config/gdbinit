@@ -10,12 +10,11 @@ if $argc == 1
     set $argv = "$arg0"
 end
 if $argc == 2
-    set $argv = "$arg0:$arg1"
+    set $argv = "$arg0@$arg1"
 end
 
 python
-argv = str(gdb.parse_and_eval("$argv")).replace('"','').split(':')
-print "argv:",argv
+argv = str(gdb.parse_and_eval("$argv")).replace('"','').split('@')
 
 import sys
 import os
@@ -50,6 +49,11 @@ try:
         vimgdb.Kill()
     elif argv[0] == "disable":
         vimgdb.Disable()
+    elif argv[0] == "goto":
+        try:
+            vimgdb.Update(force=True,update_file=False,goto_cle=True,location=argv[1])
+        except Exception as error:
+            print("{0}".format(str(error)))
     elif argv[0] == "reload":
         vimgdb.Update(force=True,update_file=True,goto_cle=True)
     elif argv[0] == "update":
@@ -69,8 +73,12 @@ end
 
 _vimgdb register
 
-define sync
+define vsync
     _vimgdb reload
+end
+
+define vgoto
+    _vimgdb goto $arg0
 end
 
 # gdb hooks
