@@ -21,15 +21,15 @@ Note: The example demonstrates Vimgdb while using [Tmux](https://tmux.github.io/
 1. GNU Gdb with python support. Verify in Gdb with:
 
        (gdb) python-interactive
-    
+
 2. Vim with clientserver capability. Verify by looking for +clientserver with:
 
        vim --version
- 
- 
+
+
 ## Installation
 
-Vimgdb can be run from the root of its source directory by typing `bin/vimgdb`, but requires installation to be run from anywhere:
+Vimgdb can be run from the root of its source directory by running `bin/vimgdb-server` and `bin/vimgdb`, but requires installation to be run from anywhere:
 
     > python setup.py install
 
@@ -38,13 +38,27 @@ Vimgdb can be run from the root of its source directory by typing `bin/vimgdb`, 
 
 Start Vim:
 
-    > vimgdb [vim parameters]
+    > vimgdb-server [vim parameters]
 
 From a different terminal, start Gdb:
 
     > vimgdb [path/to/debug/binary]
 
+Vimgdb functions are called througth events and hooks, but can also directly be called (type 'help vimgdb' in gdb). In case Vim and Gdb are desynchronize, type:
+
+    (gdb) vimgdb reload
+
+In case you want to jump to other files or functions in Vim, type:
+
+    (gdb) vimgdb goto <expression>
+
+Where `expression` is decoded in the same way as GDB's builtin break or edit commands. For example:
+
+    (gdb) vimgdb goto main
+    (gdb) vimgdb goto main.cc:8
+
 
 ## How it works
 
-Vimgdb starts Vim as a server such that Gdb can connect to it. Gdb is started upon the next call to Vimgdb if it is confirmed that the Vim server is running. Information about the current execution state is passed from Gdb to Vim upon triggering a hook or event, e.g., hitting a breakpoint, stepping though code, moving up and down the call stack, etc. The corresponding file will be opened in Vim, breakpoints highlighted and the current line of execution indicated.
+Using the `vimgdb-server` command, Vim is started as a server such that Gdb can connect to it. Gdb is started upon calling `vimgdb`. Information about the current execution state is passed from Gdb to Vim upon triggering a hook or event, e.g., hitting a breakpoint, stepping though code, moving up and down the call stack, etc. The corresponding file will be opened in Vim, breakpoints highlighted and the current line of execution indicated.
+

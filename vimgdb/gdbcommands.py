@@ -36,7 +36,7 @@ class VimgdbCommand(gdb.Command):
 class VimgdbGotoCommand(gdb.Command):
     """Goto provided location with vim.
 
-    The provided location is decoded in the way that GDB's inbuilt break or edit commands do.
+    The provided location is decoded in the way that GDB's builtin break or edit commands do.
     example:
         vimgdb goto test.cc:8
         vimgdb goto main"""
