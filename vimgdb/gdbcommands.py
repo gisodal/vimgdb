@@ -34,20 +34,26 @@ class VimgdbCommand(gdb.Command):
             "vimgdb", gdb.COMMAND_SUPPORT, gdb.COMPLETE_NONE, True)
 
 class VimgdbGotoCommand(gdb.Command):
-    """goto
-    docstring."""
+    """Goto provided location with vim.
+
+    The provided location is decoded in the way that GDB's inbuilt break or edit commands do.
+    example:
+        vimgdb goto test.cc:8
+        vimgdb goto main"""
 
     def __init__ (self):
         super (VimgdbGotoCommand, self).__init__(
             "vimgdb goto", gdb.COMMAND_SUPPORT, gdb.COMPLETE_NONE)
 
     def invoke (self, arg, from_tty):
+        if arg == "":
+            arg = None
+
         HandleException(vimgdb.Update,force=True,update_file=False,goto_line=True,location=arg)
 
 
 class VimgdbDisableCommand(gdb.Command):
-    """disable
-    docstring."""
+    """Removes vimgdb interface layer from vim session."""
 
     def __init__ (self):
         super (VimgdbDisableCommand, self).__init__(
@@ -58,8 +64,7 @@ class VimgdbDisableCommand(gdb.Command):
 
 
 class VimgdbKillCommand(gdb.Command):
-    """kill
-    docstring."""
+    """Removes current line of execution highlighting from vim session."""
 
     def __init__ (self):
         super (VimgdbKillCommand, self).__init__(
@@ -70,8 +75,7 @@ class VimgdbKillCommand(gdb.Command):
 
 
 class VimgdbUpdateCommand(gdb.Command):
-    """update
-    docstring."""
+    """Update breakpoints and highlighting in vim."""
 
     def __init__ (self):
         super (VimgdbUpdateCommand, self).__init__(
@@ -82,8 +86,9 @@ class VimgdbUpdateCommand(gdb.Command):
 
 
 class VimgdbReloadCommand(gdb.Command):
-    """reload
-    docstring."""
+    """Resynchronize vim and gdb.
+    Reloads file, breakpoints and highlighting in vim session.
+    This function can be used in case vim and gdb get desynchronized."""
 
     def __init__ (self):
         super (VimgdbReloadCommand, self).__init__(
