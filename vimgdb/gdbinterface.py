@@ -10,9 +10,6 @@ class Gdb:
 
     def __init__(self):
         self.executable = "gdb"
-        self.src = "_vimgdb_src"
-        self.breakpoints = "_vimgdb_breakpoints"
-        self.argv = "_vimgdb_argv"
 
     def Start(self,args=[],check=True):
         """Start GNU Gdb."""
@@ -128,21 +125,4 @@ class Gdb:
                     enabled[breakline] = breakpoint.enabled
 
         return breaklines,enabled,update_breakline
-
-    def GetStoredBreakpoints(self):
-        """Get previously stored breakpoint lines."""
-        breakpoints = set(int(i) for i in self.GetValue(self.breakpoints).split(':') if i)
-        return breakpoints
-
-    def StoreBreakpoints(self,breakpoints):
-        """Store breakpoint lines (in GNU Gdb conventience variable)."""
-        self.SetValue(self.breakpoints,":".join(str(breakline) for breakline in breakpoints))
-
-    def GetStoredFile(self):
-        """Get previously stored source file holding current line of excecution."""
-        return self.GetValue(self.src)
-
-    def StoreFile(self,filename):
-        """Store source file holding current line of excecution."""
-        self.SetValue(self.src,filename)
 

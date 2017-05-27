@@ -1,14 +1,18 @@
+from __future__ import print_function
 from .viminterface import Vim
 from .gdbinterface import Gdb
 from .vimgdbexception import VimgdbError
 from .settings import settings
 from .version import Version
 
+
 class Vimgdb:
 
     def __init__(self):
         self.vim = Vim()
         self.gdb = Gdb()
+        self.vim_breakpoints = set()
+        self.vim_file = None
 
     def Version(self):
         """Return current vimgdb version."""
@@ -64,8 +68,7 @@ class Vimgdb:
         self.vim.NewCommand()
 
         # get last known open file in vim
-        vim_source = self.gdb.GetStoredFile()
-        update_file = vim_source != fullsource or update_file
+        update_file = self.vim_file != fullsource or update_file
 
         # update file open in vim
         if update_file:
@@ -77,11 +80,10 @@ class Vimgdb:
             self.vim.InitSignColumn()
             self.vim.UpdateBreakpoints(breakpoints,enabled)
         else:
-            stored_breakpoints = self.gdb.GetStoredBreakpoints()
-            add_breakpoints = breakpoints - stored_breakpoints
+            add_breakpoints = breakpoints - self.vim_breakpoints
             if update_breakline != None:
                 add_breakpoints.add(update_breakline)
-            remove_breakpoints = stored_breakpoints - breakpoints
+            remove_breakpoints = self.vim_breakpoints - breakpoints
             self.vim.UpdateBreakpoints(add_breakpoints,enabled,remove_breakpoints)
 
         # goto line
@@ -105,15 +107,15 @@ class Vimgdb:
         # execute commands in vim
         ret = self.vim.RunCommand()
 
-        # store state in gdb
+        # store vim state
         if ret != 0:
-            self.gdb.StoreFile("")
-            self.gdb.StoreBreakpoints(set())
+            self.vim_file = None
+            self.vim_breakpoints = set()
         elif update_file:
-            self.gdb.StoreFile(fullsource)
-            self.gdb.StoreBreakpoints(breakpoints)
+            self.vim_file = fullsource
+            self.vim_breakpoints = breakpoints
         else:
-            self.gdb.StoreBreakpoints(breakpoints)
+            self.vim_breakpoints = breakpoints
 
         return ret
 
