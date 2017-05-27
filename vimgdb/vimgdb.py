@@ -38,6 +38,7 @@ class Vimgdb:
         self.vim.NewCommand()
         self.vim.DisableSignColumns()
         ret = self.vim.RunCommand()
+        self.vim_breakpoints = set()
         return ret
 
     def Kill(self):
