@@ -46,7 +46,7 @@ class Vimgdb:
     def Update(self,
             force=False,
             update_file=False,
-            goto_cle=True,
+            goto_line=True,
             update_breakpoint=None,
             delete_breakpoint=None,
             location=None):
@@ -84,14 +84,23 @@ class Vimgdb:
             remove_breakpoints = stored_breakpoints - breakpoints
             self.vim.UpdateBreakpoints(add_breakpoints,enabled,remove_breakpoints)
 
-        # goto and highlight current line of execution
-        if is_running:
-            self.vim.Cle(line)
-        else:
-            self.vim.RemoveCle()
-
-        if goto_cle:
+        # goto line
+        if goto_line:
             self.vim.GotoLine(line)
+
+        # highlight current line of execution
+        if location != None:
+            if is_running:
+                cle_fullsource,cle_source,cle_line = self.gdb.GetLocation()
+                if cle_fullsource == fullsource:
+                    self.vim.Cle(cle_line)
+                else:
+                    self.vim.RemoveCle()
+        else:
+            if is_running:
+                self.vim.Cle(line)
+            else:
+                self.vim.RemoveCle()
 
         # execute commands in vim
         ret = self.vim.RunCommand()
@@ -107,52 +116,4 @@ class Vimgdb:
             self.gdb.StoreBreakpoints(breakpoints)
 
         return ret
-
-    def Register(self):
-        """Register all events required by Vimgdb. (Call from GNU Gdb)."""
-        import gdb
-
-        def HandleException(function, *args, **kwargs):
-            try:
-                ret = function(*args, **kwargs)
-                if ret != 0  and settings.debug:
-                    print("Connection to Vim server failed")
-                return ret
-            except VimgdbError as error:
-                if settings.debug:
-                    import traceback
-                    print(traceback.format_exc())
-                print("{0}".format(str(error)))
-
-        def StopEvent(stop_event):
-            HandleException(self.Update,force=True,goto_cle=True)
-
-        def BreakEvent(breakpoint):
-            HandleException(self.Update,force=True,goto_cle=False)
-
-        def BreakModifyEvent(breakpoint):
-            HandleException(self.Update,force=True,goto_cle=False,update_breakpoint=int(breakpoint.number))
-
-        def BreakDelEvent(breakpoint):
-            HandleException(self.Update,force=True,goto_cle=False,delete_breakpoint=int(breakpoint.number))
-
-        def ObjEvent(obj):
-            try:
-                self.Update(goto_cle=True,force=True,location="main")
-            except: pass
-
-        gdb.events.stop.connect(StopEvent)
-        gdb.events.breakpoint_created.connect(BreakEvent)
-        gdb.events.breakpoint_modified.connect(BreakModifyEvent)
-        gdb.events.breakpoint_deleted.connect(BreakDelEvent)
-        gdb.events.new_objfile.connect(ObjEvent)
-
-
-def main(args):
-    vimgdb = Vimgdb()
-    vimgdb.Start(args)
-
-if __name__ == "__main__":
-    import sys
-    main(sys.argv[1:])
 

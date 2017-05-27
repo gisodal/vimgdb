@@ -1,100 +1,52 @@
 # vim: set filetype=python
 
-# vimgdb interface
-define _vimgdb
-set $argv = 0
-if $argc == 0
-    set $argv = ""
-end
-if $argc == 1
-    set $argv = "$arg0"
-end
-if $argc == 2
-    set $argv = "$arg0@$arg1"
-end
-
+# register vimgdb functions and events
 python
-argv = str(gdb.parse_and_eval("$argv")).replace('"','').split('@')
-
+from __future__ import print_function
 import sys
 import os
-
-def GetVimgdb():
-    try:
-        cwd = os.getcwd()
-        if cwd not in sys.path:
-            sys.path.insert(0,os.getcwd())
-
-        from vimgdb import Vimgdb
-        return Vimgdb()
-    except ImportError as error:
-        print("Python {0}.{1}.{2} import error:".format(
-            sys.version_info.major,
-            sys.version_info.minor,
-            sys.version_info.micro,
-            str(error)))
-
-        print("Vimgdb searched in:")
-        for directory in sys.path:
-            print("    {0}".format(directory))
-
-        sys.exit(1)
-
 try:
-    vimgdb = GetVimgdb()
+    cwd = os.getcwd()
+    if cwd not in sys.path:
+        sys.path.insert(0,os.getcwd())
 
-    if argv[0] == "register":
-        vimgdb.Register()
-    elif argv[0] == "kill":
-        vimgdb.Kill()
-    elif argv[0] == "disable":
-        vimgdb.Disable()
-    elif argv[0] == "goto":
-        try:
-            vimgdb.Update(force=True,update_file=False,goto_cle=True,location=argv[1])
-        except Exception as error:
-            print("{0}".format(str(error)))
-    elif argv[0] == "reload":
-        vimgdb.Update(force=True,update_file=True,goto_cle=True)
-    elif argv[0] == "update":
-        vimgdb.Update(force=False,update_file=False,goto_cle=True)
-    else:
-        raise RuntimeError("Unknown vimgdb option '{0}'".format(argv[0]))
+    from vimgdb.gdbcommands import Register
+    Register()
 
-except KeyboardInterrupt:
-    pass
+except ImportError as error:
+    print("Python {0}.{1}.{2} import error:".format(
+        sys.version_info.major,
+        sys.version_info.minor,
+        sys.version_info.micro,
+        str(error)))
+
+    print("Vimgdb searched in:")
+    for directory in sys.path:
+        print("    {0}".format(directory))
+
+    sys.exit(1)
+
 except Exception as error:
     import traceback
     print(traceback.format_exc())
     print("Vimgdb Exception: {0}".format(str(error)))
 
 end
-end
 
-_vimgdb register
-
-define vsync
-    _vimgdb reload
-end
-
-define vgoto
-    _vimgdb goto $arg0
-end
-
-# gdb hooks
+# vimgdb hooks
 define hook-quit
-    _vimgdb disable
+    vimgdb disable
 end
 
 define hookpost-up
-    _vimgdb update
+    vimgdb update
 end
 
 define hookpost-down
-    _vimgdb update
+    vimgdb update
 end
 
 define hookpost-kill
-    _vimgdb kill
+    vimgdb kill
 end
 
