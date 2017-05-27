@@ -24,13 +24,13 @@ try:
     if "--version" in sys.argv:
         print("Version {0}".format(vimgdb.Version()))
     else:
-        if vimgdb.Running():
-            vimgdb.StartGdb(sys.argv[1:])
+        if not vimgdb.Running():
+            vimgdb.StartVim(sys.argv[1:])
         else:
-            print("Vim server not started. Run 'vimgdb-server'.")
+            print("Vim server already running.")
+
 
 except Exception as error:
-    print(traceback.format_exc())
     print(str(error))
     sys.exit(1)
 

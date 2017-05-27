@@ -2,22 +2,19 @@ from __future__ import print_function, unicode_literals
 import subprocess
 import os
 
+from .vimgdbexception import VimgdbError
 from .viminterface import Vim
+from .settings import settings
 
 class Gdb:
 
     def __init__(self):
         self.executable = "gdb"
-        self.src = "_vimgdb_src"
-        self.breakpoints = "_vimgdb_breakpoints"
-        self.argv = "_vimgdb_argv"
 
     def Start(self,args=[],check=True):
         """Start GNU Gdb."""
-        from os import path
-
-        library_dir = path.abspath(path.dirname(__file__))
-        gdbinit = path.join(library_dir, 'config/gdbinit')
+        library_dir = os.path.abspath(os.path.dirname(__file__))
+        gdbinit = os.path.join(library_dir, 'config/gdbinit')
 
         cmd = [self.executable,
             "-q","-iex","source {0}".format(gdbinit)] + args
@@ -87,9 +84,9 @@ class Gdb:
             return fullsource,source,line
         except:
             if location == None:
-                raise RuntimeError("Current location not detected")
+                raise VimgdbError("Current location not detected")
             else:
-                raise RuntimeError("Location '{0}' not found".format(location))
+                raise VimgdbError("Location '{0}' not found".format(location))
 
     def GetBreakpointLines(self,source):
         """Return all lines that have breakpoints in provided source file."""
@@ -128,21 +125,4 @@ class Gdb:
                     enabled[breakline] = breakpoint.enabled
 
         return breaklines,enabled,update_breakline
-
-    def GetStoredBreakpoints(self):
-        """Get previously stored breakpoint lines."""
-        breakpoints = set(int(i) for i in self.GetValue(self.breakpoints).split(':') if i)
-        return breakpoints
-
-    def StoreBreakpoints(self,breakpoints):
-        """Store breakpoint lines (in GNU Gdb conventience variable)."""
-        self.SetValue(self.breakpoints,":".join(str(breakline) for breakline in breakpoints))
-
-    def GetStoredFile(self):
-        """Get previously stored source file holding current line of excecution."""
-        return self.GetValue(self.src)
-
-    def StoreFile(self,filename):
-        """Store source file holding current line of excecution."""
-        self.SetValue(self.src,filename)
 
