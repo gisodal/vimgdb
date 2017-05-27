@@ -34,7 +34,7 @@ Vimgdb can be run from the root of its source directory by running `bin/vimgdb-s
     > python setup.py install
 
 
-## Usage
+## Startup
 
 Start Vim:
 
@@ -43,6 +43,8 @@ Start Vim:
 From a different terminal, start Gdb:
 
     > vimgdb [path/to/debug/binary]
+
+## Usage
 
 Vimgdb functions are called througth events and hooks, but can also directly be called (type 'help vimgdb' in gdb). In case Vim and Gdb are desynchronize, type:
 
