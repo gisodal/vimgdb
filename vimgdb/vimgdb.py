@@ -48,9 +48,14 @@ class Vimgdb:
         ret = self.vim.RunCommand()
         return ret
 
+    def Clear(self):
+        self.vim_file = None
+        self.vim_breakpoints = set()
+
     def Update(self,
             force=False,
             update_file=False,
+            update_cle=True,
             goto_line=True,
             update_breakpoint=None,
             delete_breakpoint=None,
@@ -92,26 +97,26 @@ class Vimgdb:
             self.vim.GotoLine(line)
 
         # highlight current line of execution
-        if location != None:
-            if is_running:
-                cle_fullsource,cle_source,cle_line = self.gdb.GetLocation()
-                if cle_fullsource == fullsource:
-                    self.vim.Cle(cle_line)
+        if update_cle:
+            if location != None:
+                if is_running:
+                    cle_fullsource,cle_source,cle_line = self.gdb.GetLocation()
+                    if cle_fullsource == fullsource:
+                        self.vim.Cle(cle_line)
+                    else:
+                        self.vim.RemoveCle()
+            else:
+                if is_running:
+                    self.vim.Cle(line)
                 else:
                     self.vim.RemoveCle()
-        else:
-            if is_running:
-                self.vim.Cle(line)
-            else:
-                self.vim.RemoveCle()
 
         # execute commands in vim
         ret = self.vim.RunCommand()
 
         # store vim state
         if ret != 0:
-            self.vim_file = None
-            self.vim_breakpoints = set()
+            self.Clear()
         elif update_file:
             self.vim_file = fullsource
             self.vim_breakpoints = breakpoints

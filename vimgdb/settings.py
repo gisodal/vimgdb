@@ -4,7 +4,7 @@ class settings():
 
     major = 1
     minor = 3
-    micro = 0
+    micro = 1
 
     def Version():
         return "{0}.{1}.{2}".format(major,minor,micro)
