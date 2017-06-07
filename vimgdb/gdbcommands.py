@@ -112,7 +112,7 @@ def BreakEvent(breakpoint):
     if settings.debug:
         print("[break event start]")
 
-    HandleException(vimgdb.Update,force=True,goto_line=False)
+    HandleException(vimgdb.Update,force=True,goto_line=False,use_vim_location=True)
 
     if settings.debug:
         print("[break event done]")
@@ -122,7 +122,7 @@ def BreakModifyEvent(breakpoint):
     if settings.debug:
         print("[break modify event start]")
 
-    HandleException(vimgdb.Update,force=True,goto_line=False,update_breakpoint=int(breakpoint.number),update_cle=False)
+    HandleException(vimgdb.Update,force=True,goto_line=False,use_vim_location=True,modify_breakpoint=int(breakpoint.number))
 
     if settings.debug:
         print("[break modify event done]")
@@ -132,7 +132,7 @@ def BreakDeleteEvent(breakpoint):
     if settings.debug:
         print("[break delete event start]")
 
-    HandleException(vimgdb.Update,force=True,goto_line=False,delete_breakpoint=int(breakpoint.number))
+    HandleException(vimgdb.Update,force=True,goto_line=False,use_vim_location=True,delete_breakpoint=int(breakpoint.number))
 
     if settings.debug:
         print("[break delete event stop]")
@@ -155,7 +155,6 @@ def ObjectLoadEvent(obj):
         if update:
             # do not reload upon 'run' command, breakmodify event will take care of this
             vimgdb.Update(goto_line=True,force=True,location="main",update_cle=False)
-
 
     except VimgdbError: pass
 

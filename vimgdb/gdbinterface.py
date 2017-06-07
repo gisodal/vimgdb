@@ -73,7 +73,11 @@ class Gdb:
             if location == None:
                 current_line = gdb.decode_line()
             else:
-                current_line = gdb.decode_line(location)
+                try:
+                    current_line = gdb.decode_line(location)
+                except:
+                    locationalt = "{0}:1".format(location)
+                    current_line = gdb.decode_line(locationalt)
 
             symbol_table_and_line = current_line[1][0]
             symbol_table = symbol_table_and_line.symtab
