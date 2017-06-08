@@ -24,6 +24,7 @@ class Vim:
         self.executable = "vim"
         self.cle_id = 999999
         self.use_file = True
+        self.NewCommand()
 
     def Start(self,args=[],check=True):
         """Start vim as a server."""

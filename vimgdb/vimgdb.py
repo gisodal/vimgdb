@@ -68,14 +68,14 @@ class Vimgdb:
 
         if update_all:
             self.vim.UpdateBreakpoints(breakpoints,enabled)
-            return breakpoints
         else:
             add_breakpoints = breakpoints - self.breakpoints
             if update_breakline != None:
                 add_breakpoints.add(update_breakline)
             remove_breakpoints = self.breakpoints - breakpoints
             self.vim.UpdateBreakpoints(add_breakpoints,enabled,remove_breakpoints)
-            return add_breakpoints
+
+        return breakpoints
 
     def Update(self,
             force=False,
