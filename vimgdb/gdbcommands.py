@@ -49,7 +49,7 @@ class VimgdbGotoCommand(gdb.Command):
         if arg == "":
             arg = None
 
-        HandleException(vimgdb.Update,force=True,update_file=False,goto_line=True,location=arg)
+        HandleException(vimgdb.Update,force=True,location=arg)
 
 
 class VimgdbDisableCommand(gdb.Command):
@@ -82,7 +82,7 @@ class VimgdbUpdateCommand(gdb.Command):
             "vimgdb update", gdb.COMMAND_SUPPORT, gdb.COMPLETE_NONE)
 
     def invoke (self, arg, from_tty):
-        HandleException(vimgdb.Update,force=False,update_file=False,goto_line=True)
+        HandleException(vimgdb.Update)
 
 
 class VimgdbReloadCommand(gdb.Command):
@@ -95,25 +95,73 @@ class VimgdbReloadCommand(gdb.Command):
             "vimgdb reload", gdb.COMMAND_SUPPORT, gdb.COMPLETE_NONE)
 
     def invoke (self, arg, from_tty):
-        HandleException(vimgdb.Update,force=True,update_file=True,goto_line=True)
+        self.Clear()
+        HandleException(vimgdb.Update)
 
 
 def StopEvent(stop_event):
-    HandleException(vimgdb.Update,force=True,goto_line=True)
+    if settings.debug:
+        print("[stop event start]")
+
+    HandleException(vimgdb.Update)
+
+    if settings.debug:
+        print("[stop event done]")
+
 
 def BreakEvent(breakpoint):
-    HandleException(vimgdb.Update,force=True,goto_line=False)
+    if settings.debug:
+        print("[break event start]")
+
+    HandleException(vimgdb.Update,force=True,goto_line=False,update_breakpoint=True)
+
+    if settings.debug:
+        print("[break event done]")
+
 
 def BreakModifyEvent(breakpoint):
-    HandleException(vimgdb.Update,force=True,goto_line=False,update_breakpoint=int(breakpoint.number))
+    if settings.debug:
+        print("[break modify event start]")
+
+    HandleException(vimgdb.Update,force=True,goto_line=False,update_breakpoint=True,modify_breakpoint=int(breakpoint.number))
+
+    if settings.debug:
+        print("[break modify event done]")
+
 
 def BreakDeleteEvent(breakpoint):
-    HandleException(vimgdb.Update,force=True,goto_line=False,delete_breakpoint=int(breakpoint.number))
+    if settings.debug:
+        print("[break delete event start]")
+
+    HandleException(vimgdb.Update,force=True,goto_line=False,update_breakpoint=True,delete_breakpoint=int(breakpoint.number))
+
+    if settings.debug:
+        print("[break delete event stop]")
+
 
 def ObjectLoadEvent(obj):
+    if settings.debug:
+        print("[object load event start]")
+
     try:
-        vimgdb.Update(goto_line=True,force=True,location="main")
-    except: pass
+        import re
+        update = True
+        # do not update upon symbol reload when having typed 'run'
+        history = gdb.execute('show command',to_string=True).split('\n')
+        if len(history) > 1:
+            regexp = re.compile('[ \t]*[0-9]+[ \t]+r(:?|u|un)')
+            if regexp.search(history[-2]):
+                update = False
+
+        vimgdb.Clear()
+        if update:
+            # do not reload upon 'run' command, breakmodify event will take care of this
+            vimgdb.Update(goto_line=True,force=True,location="main",update_cle=False)
+
+    except VimgdbError: pass
+
+    if settings.debug:
+        print("[object load event stop]")
 
 
 def Register():

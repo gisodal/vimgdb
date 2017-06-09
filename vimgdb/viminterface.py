@@ -24,6 +24,7 @@ class Vim:
         self.executable = "vim"
         self.cle_id = 999999
         self.use_file = True
+        self.NewCommand()
 
     def Start(self,args=[],check=True):
         """Start vim as a server."""
@@ -88,7 +89,7 @@ class Vim:
                 f = open(cmdfile, 'w')
                 f.write("\n".join(self.command))
                 f.close()
-                command = "<Esc>:source {0}<Enter>i<Esc>".format(cmdfile)
+                command = "<Esc>:silent! source {0}<Enter>i<Esc>".format(cmdfile)
             else:
                 self.Redraw()
                 function = [ 'silent execute "function! Vimgdb()' ]
@@ -178,8 +179,11 @@ class Vim:
         self.RemoveCle()
         self.AddSign(line,"VimgdbLocationSign",self.cle_id)
 
-    def GotoFile(self,filename,check=False):
+    def GotoFile(self,filename,line=None):
         """Open file."""
-        self.AddCommand("edit {0}".format(filename))
+        if line == None:
+            self.AddCommand("edit {0}".format(filename))
+        else:
+            self.AddCommand("edit +{0} {1}".format(line,filename))
 
 
