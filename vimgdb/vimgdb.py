@@ -36,7 +36,7 @@ class Vimgdb:
         self.vim.NewCommand()
         self.vim.DisableSignColumns()
         ret = self.vim.RunCommand()
-        self.breakpoints = set()
+        self.Clear()
         return ret
 
     def Kill(self):
@@ -82,7 +82,6 @@ class Vimgdb:
             update_file=False,
             update_cle=True,
             update_breakpoint=False,
-            use_vim_location=False,
             goto_line=True,
             modify_breakpoint=None,
             delete_breakpoint=None,
@@ -94,19 +93,23 @@ class Vimgdb:
         if not (is_running or force):
             return 0
 
-        # create new series of vim commands
-        self.vim.NewCommand()
-
         # get current location in gdb or vim
-        if use_vim_location and self.fullsource != None:
-            fullsource = self.fullsource
-            source = self.source
-            line = self.line
+        if update_breakpoint:
+            if self.fullsource != None:
+                # use location opened in vim
+                fullsource = self.fullsource
+                source = self.source
+                line = self.line
+            else:
+                return 0
         else:
             fullsource,source,line = self.gdb.GetLocation(location)
 
         # get last known open file in vim
         update_file = self.fullsource != fullsource or update_file
+
+        # create new series of vim commands
+        self.vim.NewCommand()
 
         # update file open in vim [and go to line]
         if update_file:
@@ -114,21 +117,22 @@ class Vimgdb:
                 self.UpdateFile(fullsource,line)
             else:
                 self.UpdateFile(fullsource)
-        elif is_running and goto_line:
+        elif goto_line:
             self.vim.GotoLine(line)
 
         # update breakpoints
         breakpoints = self.UpdateBreakpoints(source,update_file,modify_breakpoint,delete_breakpoint)
 
         # highlight current line of execution
-        if update_cle and is_running:
-            cle_fullsource,cle_source,cle_line = self.gdb.GetLocation()
-            if cle_fullsource == fullsource:
-                self.vim.Cle(cle_line)
+        if update_cle:
+            if is_running:
+                cle_fullsource,cle_source,cle_line = self.gdb.GetLocation()
+                if cle_fullsource == fullsource:
+                    self.vim.Cle(cle_line)
+                else:
+                    self.vim.RemoveCle()
             else:
                 self.vim.RemoveCle()
-        else:
-            self.vim.RemoveCle()
 
         # execute commands in vim
         ret = self.vim.RunCommand()
