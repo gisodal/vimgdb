@@ -18,7 +18,10 @@ class Gdb:
 
         cmd = [self.executable,
             "-q","-iex","source {0}".format(gdbinit)] + args
-        subprocess.call(cmd)
+        try:
+            subprocess.call(cmd)
+        except KeyboardInterrupt:
+            subprocess.call("stty echo",shell=True)
 
     def GetValue(self,variable):
         """Return value of GNU Gdb parameter "<variable name>".
