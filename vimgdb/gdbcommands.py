@@ -156,7 +156,7 @@ def ObjectLoadEvent(obj):
         vimgdb.Clear()
         if update:
             # do not reload upon 'run' command, breakmodify event will take care of this
-            vimgdb.Update(goto_line=True,force=True,location="main",update_cle=False)
+            HandleException(vimgdb.Update,goto_line=True,force=True,location="main",update_cle=False)
 
     except VimgdbError: pass
 
