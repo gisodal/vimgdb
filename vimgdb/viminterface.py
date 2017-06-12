@@ -89,7 +89,10 @@ class Vim:
                 f = open(cmdfile, 'w')
                 f.write("\n".join(self.command))
                 f.close()
-                command = "<Esc>:silent! source {0}<Enter>i<Esc>".format(cmdfile)
+                if settings.debug:
+                    command = "<Esc>:source {0}<Enter>i<Esc>".format(cmdfile)
+                else:
+                    command = "<Esc>:silent! source {0}<Enter>i<Esc>".format(cmdfile)
             else:
                 self.Redraw()
                 function = [ 'silent execute "function! Vimgdb()' ]
