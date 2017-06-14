@@ -1,3 +1,15 @@
+set nocompatible
+set shortmess=a
+set sidescroll=1
+set sidescrolloff=10
+set scrolloff=10
+set number
+set lazyredraw
+
+filetype plugin on
+filetype indent on
+syntax on
+
 autocmd  ColorScheme  *  highlight  VimgdbBreakpoint          ctermfg=Red   ctermbg=None  cterm=Bold
 autocmd  ColorScheme  *  highlight  VimgdbDisabledBreakpoint  ctermfg=238   ctermbg=None  cterm=Bold
 autocmd  ColorScheme  *  highlight  VimgdbLocation            ctermfg=None  ctermbg=238   cterm=None
@@ -11,10 +23,11 @@ sign  define  VimgdbDisabledBreakpointSign  text=⛔                 texthl=Vimg
 sign  define  VimgdbLocationSign            linehl=VimgdbLocation
 sign  define  VimgdbDummy
 
-set shortmess=a
-set sidescroll=1
-set sidescrolloff=10
-set scrolloff=10
-set number
-set lazyredraw
+function! VimgdbCommand(command)
+  redir => output
+    silent exe a:command
+  redir END
+
+  return output
+endfunction
 

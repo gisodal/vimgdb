@@ -108,7 +108,9 @@ class Vimgdb:
         # get last known open file in vim
         update_file = self.fullsource != fullsource or update_file
 
+
         # create new series of vim commands
+        ret = 0
         self.vim.NewCommand()
 
         # update file open in vim [and go to line]
@@ -117,6 +119,9 @@ class Vimgdb:
                 self.UpdateFile(fullsource,line)
             else:
                 self.UpdateFile(fullsource)
+
+            ret = self.vim.RunCommand()
+            self.vim.NewCommand()
         elif goto_line:
             self.vim.GotoLine(line)
 
@@ -135,7 +140,7 @@ class Vimgdb:
                 self.vim.RemoveCle()
 
         # execute commands in vim
-        ret = self.vim.RunCommand()
+        ret = self.vim.RunCommand() + ret
 
         # store vim state
         if ret != 0:

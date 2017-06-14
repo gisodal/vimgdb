@@ -95,7 +95,7 @@ class VimgdbReloadCommand(gdb.Command):
             "vimgdb reload", gdb.COMMAND_SUPPORT, gdb.COMPLETE_NONE)
 
     def invoke (self, arg, from_tty):
-        self.Clear()
+        vimgdb.Clear()
         HandleException(vimgdb.Update)
 
 
@@ -150,13 +150,15 @@ def ObjectLoadEvent(obj):
         history = gdb.execute('show command',to_string=True).split('\n')
         if len(history) > 1:
             regexp = re.compile('[ \t]*[0-9]+[ \t]+r(:?|u|un)')
-            if regexp.search(history[-2]):
+            if len(history) >= 2 and regexp.search(history[-2]):
                 update = False
 
         vimgdb.Clear()
         if update:
             # do not reload upon 'run' command, breakmodify event will take care of this
-            vimgdb.Update(goto_line=True,force=True,location="main",update_cle=False)
+            try:
+                vimgdb.Update(goto_line=True,force=True,location="main",update_cle=False)
+            except: pass
 
     except VimgdbError: pass
 

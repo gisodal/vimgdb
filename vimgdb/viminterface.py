@@ -73,6 +73,34 @@ class Vim:
         """Add command to the vimgdb batch."""
         self.command.append(command)
 
+    def CurrentFile(self):
+        return self.EvalCommand('echo expand("%:p")')
+
+    def ExecCommand(self,command):
+        cmd = [ self.executable,
+                "--servername",self.servername,
+                "--remote-send",command]
+
+        if settings.debug:
+            return subprocess.call(cmd)
+        else:
+            DEVNULL = open(os.devnull, 'w')
+            return subprocess.call(cmd,stdout=DEVNULL,stderr=subprocess.STDOUT)
+
+    def EvalCommand(self,command):
+        cmd = [ self.executable,
+                "--servername",self.servername,
+                "--remote-expr",
+                "VimgdbCommand('{0}')".format(command) ]
+
+        if settings.debug:
+            result = subprocess.check_output(cmd)
+        else:
+            DEVNULL = open(os.devnull, 'w')
+            result = subprocess.check_output(cmd,stdout=DEVNULL,stderr=subprocess.STDOUT)
+
+        return result.decode('utf-8').strip()
+
     def RunCommand(self):
         """Send all commands in the vimgdb batch."""
         if len(self.command) > 0:
@@ -89,7 +117,10 @@ class Vim:
                 f = open(cmdfile, 'w')
                 f.write("\n".join(self.command))
                 f.close()
-                command = "<Esc>:silent! source {0}<Enter>i<Esc>".format(cmdfile)
+                if settings.debug:
+                    command = "<Esc>:source {0}<Enter>i<Esc>".format(cmdfile)
+                else:
+                    command = "<Esc>:silent! source {0}<Enter>i<Esc>".format(cmdfile)
             else:
                 self.Redraw()
                 function = [ 'silent execute "function! Vimgdb()' ]
@@ -100,15 +131,7 @@ class Vim:
                 function = " | ".join(function)
                 command = '<Esc>:{0}<Enter>'.format(function)
 
-            cmd = [ self.executable,
-                "--servername",self.servername,
-                "--remote-send",command]
-
-            if settings.debug:
-                return subprocess.call(cmd)
-            else:
-                DEVNULL = open(os.devnull, 'w')
-                return subprocess.call(cmd,stdout=DEVNULL,stderr=subprocess.STDOUT)
+            return self.ExecCommand(command)
         else:
             return 0
 

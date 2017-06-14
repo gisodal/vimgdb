@@ -18,7 +18,10 @@ class Gdb:
 
         cmd = [self.executable,
             "-q","-iex","source {0}".format(gdbinit)] + args
-        subprocess.call(cmd)
+        try:
+            subprocess.call(cmd)
+        except KeyboardInterrupt:
+            subprocess.call("stty echo",shell=True)
 
     def GetValue(self,variable):
         """Return value of GNU Gdb parameter "<variable name>".
@@ -47,13 +50,20 @@ class Gdb:
         param.value = str(value)
 
     def IsRunning(self):
-        """Return true if currently executing source."""
+        """Return true if currently executing code in gdb."""
         import gdb
-        try:
-            gdb.selected_frame()
-            return True
-        except:
+        frame_fullsource,_,_ = self.GetFrameLocation()
+        if frame_fullsource == None:
             return False
+
+        try:
+            fullsource,_,_ = self.GetLocation()
+            if frame_fullsource != fullsource:
+                return False
+            else:
+                return True
+        except:
+            return True
 
     def IsFunction(self,location):
         """Check if provided location is a function.
@@ -65,6 +75,21 @@ class Gdb:
             return symbol.is_function
         else:
             return False;
+
+    def GetFrameLocation(self):
+        """Get location of current line of execution from active frame."""
+        import gdb
+        try:
+            frame = gdb.selected_frame()
+            pc = frame.pc()
+            symbol_table_and_line = gdb.find_pc_line(pc)
+            symbol_table = symbol_table_and_line.symtab
+            fullsource = symbol_table.fullname()
+            source = symbol_table.filename
+            line = symbol_table_and_line.line
+            return fullsource,source,line
+        except:
+            return None,None,None
 
     def GetLocation(self,location=None):
         """Get location of current line of execution, or location of provided location name."""
