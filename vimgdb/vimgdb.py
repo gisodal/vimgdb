@@ -55,7 +55,7 @@ class Vimgdb:
 
     def UpdateFile(self,fullsource,line=None):
         self.vim.GotoFile(fullsource,line)
-        self.vim.InitSignColumn()
+        self.vim.InitSignColumn(fullsource)
 
     def UpdateBreakpoints(self,
             source,

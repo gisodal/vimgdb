@@ -153,17 +153,20 @@ class Vim:
         """Add the sign column."""
         self.AddSign(1,"VimgdbDummy",999990)
 
-    def DisableSignColumn(self):
+    def DisableSignColumn(self,filename=None):
         """Remove sign column in current file."""
-        self.AddCommand('execute "sign unplace * file=" . expand("%:p")')
+        if filename == None:
+            self.AddCommand('execute "sign unplace * file=" . expand("%:p")')
+        else:
+            self.AddCommand('execute "sign unplace * file={0}"'.format(filename))
 
     def DisableSignColumns(self):
         """Remove all sign columns."""
         self.AddCommand('execute "sign unplace *"')
 
-    def InitSignColumn(self):
+    def InitSignColumn(self,fullsource=None):
         """Create empty sign column."""
-        self.DisableSignColumn()
+        self.DisableSignColumn(fullsource)
         self.EnableSignColumn()
 
     def RemoveBreakpoints(self,breakpoints):
