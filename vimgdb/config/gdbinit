@@ -33,6 +33,25 @@ except Exception as error:
 
 end
 
+# do not print source line while stepping through code
+define n
+    set logging file /dev/null
+    set logging redirect on
+    set logging on
+    next
+    set logging off
+    display
+end
+
+define s
+    set logging file /dev/null
+    set logging redirect on
+    set logging on
+    step
+    set logging off
+    display
+end
+
 # vimgdb hooks
 define hook-quit
     vimgdb disable
